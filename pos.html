@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Quầy Bán Hàng POS Gọi Món Lee's Coffee">
+  <title>Lee's Coffee – POS Bán Hàng</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #f1f5f9;
+      --border-radius: 2px;
+      --brand-navy: #1e40af;
+    }
+    
+    * { 
+      font-family: 'Inter', sans-serif; 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+    
+    body { 
+      background: var(--bg-canvas); 
+      overflow: hidden;
+      font-size: 12.5px;
+    }
+    
+    .mono { 
+      font-family: 'DM Mono', monospace !important; 
+    }
+    
+    /* PWA custom scrollbars */
+    ::-webkit-scrollbar { 
+      width: 4px; 
+      height: 4px; 
+    }
+    ::-webkit-scrollbar-thumb { 
+      background: #cbd5e1; 
+      border-radius: 2px; 
+    }
+    ::-webkit-scrollbar-thumb:hover { 
+      background: #94a3b8; 
+    }
+    
+    /* General Avanti Flat CSS fields */
+    .input-field {
+      width: 100%;
+      padding: 10px 14px;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: var(--border-radius);
+      outline: none;
+      font-size: 13px;
+      transition: all 0.1s ease;
+    }
+    .input-field:focus {
+      border-color: var(--brand-navy);
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.08);
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: var(--border-radius);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.1s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-blue { background: #1e40af; color: white; }
+    .btn-gray { background: #f1f5f9; color: #475569; border: 1.5px solid #cbd5e1; }
+    .btn-green { background: #15803d; color: white; }
+    .btn:hover { filter: brightness(0.95); }
+    
+    /* Animations */
+    .fade {
+      animation: fadeIn 0.18s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media print {
+      body, html {
+        background: white !important;
+        color: black !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #root { display: none !important; }
+      #pos-print-area {
+        display: block !important;
+        visibility: visible !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        background: white !important;
+      }
+      #pos-print-area * {
+        visibility: visible !important;
+        color: black !important;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="root">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;background:#f8fafc">
+    <div style="width:24px;height:24px;border:2.5px solid #e5e7eb;border-top-color:#1e40af;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <div style="font-size:13px;font-weight:700;color:#1f2937;letter-spacing:0.02em">Lee's Coffee – Đang tải quầy gọi món POS...</div>
+  </div>
+</div>
+<script src="pos_bundle.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function(err) {});
+  }
+</script>
+</body>
+</html>

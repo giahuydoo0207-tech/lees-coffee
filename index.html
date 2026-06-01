@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Hệ thống quản lý tài chính nội bộ Lee's Coffee">
+  <title>Lee's Coffee – Quản Lý Tài Chỉ Doanh Nghiệp</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+:root {
+  --bg-canvas: #f2f2ef; /* Warm light gray from AvantiOS */
+  --bg-card: #ffffff;
+  --text-main: #1a1a1a;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+  --text-lighter: #cbd5e1;
+  --border-color: #e5e7eb;
+  
+  --border-radius-sm: 2px; /* Strict sharp corners */
+  --border-radius: 2px;
+  --border-radius-lg: 2px;
+  
+  --brand-dark: #0f0f0e; /* AvantiOS sidebar black */
+  --brand-navy: #1e40af; /* AvantiOS Navy brand accent */
+  --brand-navy-light: #eff6ff;
+  
+  --status-pending: #7a5800;
+  --status-pending-bg: #fffbeb;
+  --status-pending-border: #fcd34d;
+  
+  --status-approved: #15803d;
+  --status-approved-bg: #f0fdf4;
+  --status-approved-border: #86efac;
+  
+  --status-rejected: #be123c; /* Crimson Red brand accent */
+  --status-rejected-bg: #fff1f2;
+  --status-rejected-border: #fca5a5;
+}
+
+* { 
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@font-face {
+  font-family: 'Inter Mono';
+  src: local('DM Mono'), url('https://fonts.gstatic.com/s/dmmono/v14/szKo3Z2HC7Dp96QubtT9.woff2') format('woff2');
+  unicode-range: U+30-39, U+2E, U+2C, U+20; /* 0-9, dot, comma, space */
+}
+
+.mono { 
+  font-family: 'Inter Mono', 'Inter', sans-serif !important; 
+}
+
+body { 
+  background: var(--bg-canvas); 
+  color: var(--text-main); 
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+::-webkit-scrollbar { 
+  width: 4px; 
+  height: 4px; 
+}
+::-webkit-scrollbar-thumb { 
+  background: #d1d5db; 
+  border-radius: 2px; 
+}
+::-webkit-scrollbar-thumb:hover { 
+  background: #9ca3af; 
+}
+::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+
+/* Sidebar & Navigation */
+.sidebar { 
+  width: 208px; /* w-52 in AvantiOS */
+  min-height: 100vh; 
+  background: var(--brand-dark); 
+  display: flex; 
+  flex-direction: column; 
+  flex-shrink: 0; 
+  border-right: 1px solid #252523;
+  position: relative;
+  z-index: 10;
+}
+
+.nav-item { 
+  width: 100%;
+  padding: 10px 20px; 
+  color: #7a7a75; /* Slate/gray text for inactive in AvantiOS */
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  transition: all 0.1s ease; 
+  font-size: 12.5px; 
+  font-weight: 500; 
+  border-left: 2px solid transparent;
+  background: transparent;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  text-align: left;
+}
+.nav-item:hover { 
+  background: #1c1c1a; 
+  color: #ffffff; 
+}
+.nav-item.active { 
+  background: #252523; 
+  color: #ffffff; 
+  font-weight: 600; 
+  border-left: 2px solid #ffffff; 
+}
+
+.nav-sub-item { 
+  padding: 8px 20px 8px 38px; 
+  color: #7a7a75; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  font-size: 11.5px; 
+  font-weight: 500; 
+  transition: all 0.1s ease; 
+}
+.nav-sub-item:hover { 
+  background: #1c1c1a; 
+  color: #ffffff; 
+}
+.nav-sub-item.active { 
+  color: #ffffff; 
+  font-weight: 600; 
+  background: #252523; 
+}
+
+/* KPI & Cards */
+.kpi-card { 
+  background: var(--bg-card); 
+  border-radius: var(--border-radius); 
+  padding: 20px; 
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.1s ease; 
+}
+.kpi-card:hover { 
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06);
+}
+
+.card { 
+  background: var(--bg-card); 
+  border-radius: var(--border-radius); 
+  padding: 20px; 
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color); 
+}
+
+/* Buttons */
+.btn { 
+  padding: 8px 16px; 
+  border-radius: var(--border-radius-sm) !important; 
+  font-weight: 500; 
+  font-size: 12px; 
+  cursor: pointer; 
+  border: 1px solid transparent; 
+  transition: all 0.1s ease; 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  gap: 6px; 
+  letter-spacing: 0.01em; 
+}
+.btn:hover { 
+  filter: brightness(0.95);
+}
+.btn-red { 
+  background: #be123c; 
+  color: white; 
+} 
+.btn-blue { 
+  background: #1e40af; 
+  color: white; 
+} 
+.btn-green { 
+  background: #15803d; 
+  color: white; 
+} 
+.btn-orange { 
+  background: #d97706; 
+  color: white; 
+} 
+.btn-outline { 
+  background: white; 
+  border: 1px solid #e5e7eb; 
+  color: #374151; 
+} 
+.btn-outline:hover { 
+  background: #f9f9f7; 
+  border-color: #9ca3af;
+  color: #1a1a1a;
+}
+.btn-gray { 
+  background: white; 
+  color: #4b5563; 
+  border: 1px solid #e5e7eb;
+} 
+.btn-gray:hover { 
+  background: #f9f9f7; 
+  color: #1a1a1a;
+  border-color: #cbd5e1;
+}
+
+/* Badges */
+.badge-pending { 
+  background: var(--status-pending-bg); 
+  color: var(--status-pending); 
+  border: 1px solid var(--status-pending-border); 
+  padding: 2.5px 7px; 
+  border-radius: 2px; 
+  font-size: 10.5px; 
+  font-weight: 600; 
+  white-space: nowrap; 
+  letter-spacing: 0.02em; 
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.badge-approved { 
+  background: var(--status-approved-bg); 
+  color: var(--status-approved); 
+  border: 1px solid var(--status-approved-border); 
+  padding: 2.5px 7px; 
+  border-radius: 2px; 
+  font-size: 10.5px; 
+  font-weight: 600; 
+  white-space: nowrap; 
+  letter-spacing: 0.02em; 
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.badge-rejected { 
+  background: var(--status-rejected-bg); 
+  color: var(--status-rejected); 
+  border: 1px solid var(--status-rejected-border); 
+  padding: 2.5px 7px; 
+  border-radius: 2px; 
+  font-size: 10.5px; 
+  font-weight: 600; 
+  white-space: nowrap; 
+  letter-spacing: 0.02em; 
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Inputs & Form Controls */
+input, textarea, select { 
+  outline: none; 
+  font-family: 'Inter', sans-serif; 
+  border-radius: var(--border-radius-sm); 
+  transition: all 0.1s ease;
+}
+input:focus, textarea:focus, select:focus { 
+  border-color: #6b7280 !important; 
+  box-shadow: none !important;
+}
+.input-field { 
+  width: 100%; 
+  border: 1px solid var(--border-color); 
+  border-radius: var(--border-radius-sm); 
+  padding: 8px 12px; 
+  font-size: 12px; 
+  background: #fafafa; 
+  color: var(--text-main); 
+  transition: all 0.1s ease; 
+}
+.input-field:focus {
+  background: white;
+}
+
+/* Fade In Animation */
+.fade { 
+  animation: fadeIn 0.12s ease; 
+}
+@keyframes fadeIn { 
+  from { opacity:0; transform: translateY(2px); } 
+  to { opacity:1; transform: translateY(0); } 
+}
+
+/* Modal */
+.modal-bg { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0, 0, 0, 0.4); 
+  backdrop-filter: blur(1.5px);
+  z-index: 200; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 16px; 
+}
+.modal { 
+  background: white; 
+  border-radius: var(--border-radius); 
+  max-width: 700px; 
+  width: 100%; 
+  max-height: 90vh; 
+  overflow-y: auto; 
+  padding: 24px; 
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); 
+  border: 1px solid #e5e7eb;
+}
+
+/* Tabs */
+.tab { 
+  padding: 8px 16px; 
+  border-radius: var(--border-radius-sm); 
+  cursor: pointer; 
+  font-size: 12px; 
+  font-weight: 500; 
+  transition: all 0.1s ease; 
+  border: none; 
+  letter-spacing: 0.01em; 
+}
+.tab.active { 
+  background: #0f0f0e; 
+  color: white; 
+  box-shadow: none;
+}
+.tab:not(.active) { 
+  background: white; 
+  color: var(--text-muted); 
+  border: 1px solid #e5e7eb;
+} 
+.tab:not(.active):hover { 
+  background: #f9f9f7; 
+  color: var(--text-main); 
+  border-color: #cbd5e1;
+}
+
+/* Section Labels & Layout styling */
+.section-label { 
+  font-size: 10px; 
+  font-weight: 600; 
+  color: #9ca3af; 
+  text-transform: uppercase; 
+  letter-spacing: 0.14em; 
+  margin-bottom: 16px; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+.section-label::before { 
+  content: ""; 
+  width: 16px; 
+  height: 1px; 
+  background: #d1d5db; 
+  border-radius: 0;
+  display: inline-block; 
+}
+
+.divider { 
+  height: 1px; 
+  background: var(--border-color); 
+  margin: 16px 0; 
+}
+
+.main-content { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  overflow: hidden; 
+  background: var(--bg-canvas); 
+}
+.content-area { 
+  flex: 1; 
+  overflow-y: auto; 
+  padding: 24px; 
+  max-width: 1280px; 
+  margin: 0 auto; 
+  width: 100%; 
+}
+.topbar { 
+  background: white; 
+  padding: 0 24px; 
+  height: 52px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  flex-shrink: 0; 
+  border-bottom: 1px solid var(--border-color); 
+}
+
+@media print {
+  /* Hide all elements during thermal bill printing */
+  body, html {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Inter', sans-serif !important;
+  }
+  
+  /* Hide administrative elements */
+  #root > div:not(.fade) {
+    display: none !important;
+  }
+  .sidebar, .topbar, .main-content, .modal-bg, button, input, select, textarea {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Make the print receipt wrapper stand out fully */
+  #pos-print-area {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+  
+  #pos-print-area * {
+    visibility: visible !important;
+    color: black !important;
+  }
+}
+  </style>
+</head>
+<body>
+<div id="root">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Inter',sans-serif;color:#64748b;flex-direction:column;gap:16px;background:#f8fafc">
+    <div style="width:24px;height:24px;border:2.5px solid #e5e7eb;border-top-color:#1e40af;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <div style="font-size:12.5px;font-weight:600;letter-spacing:0.02em;color:#1f2937">Lee's Coffee – Đang tải hệ thống tài chính...</div>
+  </div>
+</div>
+<script src="bundle.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function(err) {
+      console.log('Service Worker registration failed:', err);
+    });
+  }
+</script>
+</body>
+</html>
