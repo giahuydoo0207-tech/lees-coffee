@@ -129,11 +129,11 @@ export const MgrPerformance = ({ reports }) => {
 
   // Pie chart data — 5 kênh
   const pieData = useMemo(() => [
-    { name: '💵 Tiền mặt',    value: total.cash,   color: '#1e40af' },
-    { name: '🏦 Chuyển khoản',value: total.tf,     color: '#3b82f6' },
-    { name: '💳 Thẻ ATM',     value: total.card,   color: '#7c3aed' },
-    { name: '🟢 Grab Food',   value: total.grab,   color: '#15803d' },
-    { name: '🔶 Shopee',      value: total.shopee, color: '#d97706' },
+    { name: 'Tiền mặt',    value: total.cash,   color: '#1e40af' },
+    { name: 'Chuyển khoản',value: total.tf,     color: '#3b82f6' },
+    { name: 'Thẻ ATM',     value: total.card,   color: '#7c3aed' },
+    { name: 'Grab Food',   value: total.grab,   color: '#15803d' },
+    { name: 'Shopee',      value: total.shopee, color: '#d97706' },
   ].filter(d => d.value > 0), [total]);
 
   const KPICard = ({ label, value, sub, color, trend }) => (
@@ -178,7 +178,7 @@ export const MgrPerformance = ({ reports }) => {
       {/* Trend bar chart */}
       <div style={{ background:'white', border:'1.5px solid #e5e7eb', borderRadius:'2px', padding:20 }}>
         <div style={{ fontSize:11, fontWeight:800, color:'#0f0f0e', textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:14 }}>
-          📈 XU HƯỚNG DOANH THU & LỢI NHUẬN THEO NGÀY
+          XU HƯỚNG DOANH THU & LỢI NHUẬN THEO NGÀY
         </div>
         {barData.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
@@ -197,7 +197,7 @@ export const MgrPerformance = ({ reports }) => {
           </ResponsiveContainer>
         ) : (
           <div style={{ textAlign:'center', padding:'40px 0', color:'#9ca3af', fontSize:13 }}>
-            📊 Chưa đủ dữ liệu được duyệt để vẽ biểu đồ
+            Chưa đủ dữ liệu được duyệt để vẽ biểu đồ
           </div>
         )}
       </div>
@@ -207,7 +207,7 @@ export const MgrPerformance = ({ reports }) => {
         {/* Week comparison table */}
         <div style={{ background:'white', border:'1.5px solid #e5e7eb', borderRadius:'2px', padding:20 }}>
           <div style={{ fontSize:11, fontWeight:800, color:'#0f0f0e', textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:14 }}>
-            🆚 SO SÁNH KỲ NÀY vs KỲ TRƯỚC ({period} ngày)
+            SO SÁNH KỲ NÀY vs KỲ TRƯỚC ({period} ngày)
           </div>
           <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12.5 }}>
             <thead>
@@ -257,7 +257,7 @@ export const MgrPerformance = ({ reports }) => {
         {/* Channel pie */}
         <div style={{ background:'white', border:'1.5px solid #e5e7eb', borderRadius:'2px', padding:20 }}>
           <div style={{ fontSize:11, fontWeight:800, color:'#0f0f0e', textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:10 }}>
-            🥧 TỶ TRỌNG 5 KÊNH DOANH THU
+            TỶ TRỌNG 5 KÊNH DOANH THU
           </div>
           {pieData.length > 0 ? (
             <>
@@ -369,8 +369,8 @@ export const MgrMenu = () => {
       <div style={{ background:'white', border:'1.5px solid #e5e7eb', borderRadius:'2px', padding:18 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
           <div>
-            <h2 style={{ fontSize:14, fontWeight:800, color:'#0f0f0e', margin:0, display:'flex', alignItems:'center', gap:8 }}>
-              <Coffee size={16} style={{ color:'#7c3aed' }} /> QUẢN LÝ THỰC ĐƠN & GIÁ BÁN
+            <h2 style={{ fontSize:14, fontWeight:800, color:'#0f0f0e', margin:0 }}>
+              QUẢN LÝ THỰC ĐƠN & GIÁ BÁN
             </h2>
             <p style={{ fontSize:12, color:'#6b7280', margin:'4px 0 0', lineHeight:1.4 }}>
               Thêm, sửa, ẩn món — Thu ngân sẽ thấy thực đơn cập nhật mới nhất khi kết ca.
@@ -512,7 +512,7 @@ export const MgrMenu = () => {
         <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
           <div className="fade" style={{ background:'white', padding:24, borderRadius:'2px', width:'100%', maxWidth:400, border:'1.5px solid #0f0f0e', boxShadow:'0 10px 25px rgba(0,0,0,0.2)' }}>
             <h3 style={{ fontSize:14, fontWeight:800, color:'#0f0f0e', marginBottom:16, borderBottom:'2px solid #e5e7eb', paddingBottom:8 }}>
-              ➕ THÊM MÓN MỚI VÀO THỰC ĐƠN
+              THÊM MÓN MỚI VÀO THỰC ĐƠN
             </h3>
             <div style={{ marginBottom:12 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:700, color:'#374151', marginBottom:6 }}>Tên món</label>
@@ -759,8 +759,8 @@ export const MgrInventoryAlert = () => {
       <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
           <div>
-            <h2 style={{ fontSize: 14, fontWeight: 800, color: '#0f0f0e', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Package size={16} style={{ color: '#be123c' }} /> CẢNH BÁO TỒN KHO NGUYÊN LIỆU GIAO BAN
+            <h2 style={{ fontSize: 14, fontWeight: 800, color: '#0f0f0e', margin: 0 }}>
+              CẢNH BÁO TỒN KHO NGUYÊN LIỆU GIAO BAN
             </h2>
             <p style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 0', lineHeight: 1.4 }}>
               Giám sát tồn kho nguyên liệu thời gian thực được tổng kết từ ca trực Barista gần nhất.
@@ -892,7 +892,7 @@ export const MgrInventoryAlert = () => {
           {/* Simulation replenishment */}
           <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 18 }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: '#0f0f0e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
-              ⚡ NHẬP KHO NHANH (MÔ PHỎNG)
+              NHẬP KHO NHANH (MÔ PHỎNG)
             </div>
             <form onSubmit={handleReplenish}>
               <div style={{ marginBottom: 10 }}>
@@ -921,7 +921,7 @@ export const MgrInventoryAlert = () => {
           {/* Quick recommendations */}
           <div style={{ background: '#f8fafc', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 16 }}>
             <div style={{ fontSize: 10.5, fontWeight: 800, color: '#be123c', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              🚨 GỢI Ý MUA HÀNG KHẨN CẤP
+              GỢI Ý MUA HÀNG KHẨN CẤP
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {inventoryList.filter(i => i.status !== 'safe').length === 0 ? (
@@ -945,8 +945,8 @@ export const MgrInventoryAlert = () => {
       {showOrderModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div className="fade" style={{ background: 'white', padding: 24, borderRadius: '2px', width: '100%', maxWidth: 460, border: '1.5px solid #be123c', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, color: '#be123c', margin: '0 0 14px', borderBottom: '2px solid #e5e7eb', paddingBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              📝 PHIẾU ĐỀ XUẤT NHẬP HÀNG GẤP
+            <h3 style={{ fontSize: 14, fontWeight: 800, color: '#be123c', margin: '0 0 14px', borderBottom: '2px solid #e5e7eb', paddingBottom: 8 }}>
+              PHIẾU ĐỀ XUẤT NHẬP HÀNG GẤP
             </h3>
             <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 12, lineHeight: 1.4 }}>
               Hệ thống tự động tính toán đề xuất số lượng mua hàng dựa trên nguyên lý: <strong>(Mức tối thiểu * 3) - Tồn kho hiện tại</strong> để đảm bảo kho vận hành trong 1 tuần tới.
@@ -1254,7 +1254,7 @@ export const MgrTargets = ({ reports }) => {
         {/* Recharts comparison bar chart */}
         <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: '#0f0f0e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 14 }}>
-            📊 SO SÁNH THỰC TẾ vs MỤC TIÊU THÁNG 5
+            SO SÁNH THỰC TẾ vs MỤC TIÊU THÁNG 5
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
@@ -1272,7 +1272,7 @@ export const MgrTargets = ({ reports }) => {
         {/* Historical performance table */}
         <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: '#0f0f0e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 14 }}>
-            ⏳ LỊCH SỬ HOÀN THÀNH MỤC TIÊU LIÊN TIẾP
+            LỊCH SỬ HOÀN THÀNH MỤC TIÊU LIÊN TIẾP
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
             <thead>
@@ -1311,7 +1311,7 @@ export const MgrTargets = ({ reports }) => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justify: 'center', zIndex: 1000 }}>
           <div className="fade" style={{ background: 'white', padding: 24, borderRadius: '2px', width: '100%', maxWidth: 400, border: '1.5px solid #1e40af', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
             <h3 style={{ fontSize: 14, fontWeight: 800, color: '#1e40af', margin: '0 0 16px', borderBottom: '2px solid #e5e7eb', paddingBottom: 8 }}>
-              ⚙️ THIẾT LẬP MỤC TIÊU HOẠT ĐỘNG
+              THIẾT LẬP MỤC TIÊU HOẠT ĐỘNG
             </h3>
             
             <form onSubmit={saveConfiguration}>
@@ -2045,7 +2045,7 @@ export const MgrShiftSchedule = () => {
       {/* ── Mode Switcher & Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: 0 }}>📅 Bảng Công Ca Làm Việc</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: 0 }}>Bảng Công Ca Làm Việc</h2>
           <p style={{ fontSize: 12, color: '#6b7280', margin: '3px 0 0', fontWeight: 500 }}>Phân ca từng ngày trong tuần</p>
         </div>
         
@@ -2289,7 +2289,7 @@ export const MgrStaffList = () => {
         <div style={{ padding: '14px 20px', borderBottom: '1.5px solid #e5e7eb', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h3 style={{ fontSize: 13.5, fontWeight: 900, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              👥 DANH SÁCH NHÂN VIÊN ({staff.length})
+              DANH SÁCH NHÂN VIÊN ({staff.length})
             </h3>
             <p style={{ fontSize: 11.5, color: '#6b7280', margin: '4px 0 0' }}>Tất cả nhân sự trong phân hệ xếp ca của quán</p>
           </div>
@@ -2359,7 +2359,7 @@ export const MgrStaffList = () => {
         {/* Form Add */}
         <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 18 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: '#0f0f0e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
-            ➕ THÊM NHÂN VIÊN MỚI
+            THÊM NHÂN VIÊN MỚI
           </div>
           <form onSubmit={handleAdd}>
             <div style={{ marginBottom: 12 }}>
@@ -2380,7 +2380,7 @@ export const MgrStaffList = () => {
         {/* Sync Info Alert card */}
         <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: '2px', padding: 16 }}>
           <div style={{ fontSize: 10.5, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-            🔗 LIÊN KẾT BẢNG CÔNG TỰ ĐỘNG
+            LIÊN KẾT BẢNG CÔNG TỰ ĐỘNG
           </div>
           <p style={{ fontSize: 11.5, color: '#1e40af', lineHeight: 1.5, margin: 0 }}>
             Danh sách nhân viên này được <strong>liên kết thời gian thực (Real-time sync)</strong> trực tiếp tới <strong>Bảng Công & Lịch Tuần</strong>.
