@@ -53,8 +53,10 @@ const POSLoginPage = ({ onLogin }) => {
 
   const handleLogin = () => {
     if (!canLogin) return;
-    if (password !== '123456') {
-      setError('Mật khẩu đăng nhập dùng chung không chính xác.');
+    const isMyQuyen = name.trim().toLowerCase() === 'mỹ quyên';
+    const expectedPassword = isMyQuyen ? '12345678' : '123456';
+    if (password !== expectedPassword) {
+      setError(isMyQuyen ? 'Mật khẩu đăng nhập cho tài khoản Mỹ Quyên không chính xác.' : 'Mật khẩu đăng nhập dùng chung không chính xác.');
       return;
     }
     setLoading(true);
