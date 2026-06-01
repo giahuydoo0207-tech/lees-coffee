@@ -773,7 +773,7 @@ const Dashboard = ({ reports, onResetData }) => {
         {/* Line Chart */}
         <div className="card" style={{ borderRadius: '2px', border: '1px solid #e5e7eb', background: 'white', padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, tracking: '0.14em', textTransform: 'uppercase', color: '#9ca3af' }}>📈 Xu hướng doanh thu / chi phí (7 ngày)</span>
+            <span style={{ fontSize: 10, fontWeight: 700, tracking: '0.14em', textTransform: 'uppercase', color: '#9ca3af' }}>Xu hướng doanh thu / chi phí (7 ngày)</span>
             <span style={{ fontSize: 10.5, color: '#9ca3af', fontWeight: 500, fontFamily: 'monospace' }}>(Đơn vị: K₫)</span>
           </div>
           <ResponsiveContainer width="100%" height={230}>
@@ -794,7 +794,7 @@ const Dashboard = ({ reports, onResetData }) => {
 
         {/* Pie Chart */}
         <div className="card" style={{ borderRadius: '2px', border: '1px solid #e5e7eb', background: 'white', padding: '20px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, tracking: '0.14em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 20 }}>📊 Cơ cấu chi phí vận hành tháng</div>
+          <div style={{ fontSize: 10, fontWeight: 700, tracking: '0.14em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 20 }}>Cơ cấu chi phí vận hành tháng</div>
           {pieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={230}>
               <PieChart>
@@ -814,7 +814,7 @@ const Dashboard = ({ reports, onResetData }) => {
       {/* Zebra Striped Data Table */}
       <div className="card" style={{ padding: 0, overflow: 'hidden', borderRadius: '2px', border: '1px solid #e5e7eb', background: 'white' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafafa' }}>
-          <span style={{ fontSize: 10.5, fontWeight: 700, tracking: '0.14em', textTransform: 'uppercase', color: '#9ca3af' }}>📋 Báo cáo tài chính gần đây</span>
+          <span style={{ fontSize: 10.5, fontWeight: 700, tracking: '0.14em', textTransform: 'uppercase', color: '#9ca3af' }}>Báo cáo tài chính gần đây</span>
           {onResetData && (
             <button 
               className="btn btn-blue" 
@@ -966,7 +966,7 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
     <div className="fade" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: 20, alignItems: 'start' }}>
       {/* Column Left: Input Controls */}
       <div className="card" style={{ borderRadius: '2px', border: '1px solid #e5e7eb', background: 'white', padding: '24px' }}>
-        <div className="section-label">📅 Thông tin thời gian</div>
+        <div className="section-label">Thông tin thời gian</div>
         <FormRow label="Ngày lập báo cáo">
           <input type="date" className="input-field" value={date} onChange={e => setDate(e.target.value)} style={{ borderRadius: '2px', border: '1px solid #e5e7eb' }} />
         </FormRow>
@@ -979,7 +979,7 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  📊 {dayShifts.length} CA THU NGÂN ĐÃ KẼT {fmtDate(date).split('/').slice(0,2).join('/')}
+                  {dayShifts.length} CA THU NGÂN ĐÃ KẾT {fmtDate(date).split('/').slice(0,2).join('/')}
                 </div>
                 <div style={{ fontSize: 11, color: '#3b82f6', marginTop: 2 }}>
                   {dayShifts.map(s => s.staffName + ' — ' + (s.shift === 'morning' ? 'Ca Sáng' : s.shift === 'afternoon' ? 'Ca Chiều' : 'Ca Tối')).join(' · ')}
@@ -990,16 +990,16 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
                 onClick={autoFillFromShifts}
                 style={{ background: '#1e40af', color: 'white', border: 'none', borderRadius: '2px', padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
-                ↩ Tổng hợp vào form
+                Tổng hợp vào form
               </button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
               {[
-                ['💵 Tiền mặt', shiftTotal.cash, '#1e40af'],
-                ['🏦 CK', shiftTotal.tf, '#1e40af'],
-                ['💳 Thẻ', shiftTotal.card, '#7c3aed'],
-                ['🟢 Grab', shiftTotal.grab, '#15803d'],
-                ['🔶 Shopee', shiftTotal.shopee, '#d97706'],
+                ['Tiền mặt', shiftTotal.cash, '#1e40af'],
+                ['Chuyển khoản', shiftTotal.tf, '#1e40af'],
+                ['Thẻ', shiftTotal.card, '#7c3aed'],
+                ['Grab', shiftTotal.grab, '#15803d'],
+                ['Shopee', shiftTotal.shopee, '#d97706'],
               ].map(([l, v, c]) => (
                 <div key={l} style={{ background: 'white', border: '1px solid #bfdbfe', borderRadius: '2px', padding: '8px 10px', textAlign: 'center' }}>
                   <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, marginBottom: 3 }}>{l}</div>
@@ -1009,32 +1009,31 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
             </div>
             {shiftTotal.orders > 0 && (
               <div style={{ marginTop: 8, fontSize: 11.5, color: '#1e40af', fontWeight: 600 }}>
-                🧓 Tổng sản lượng thu ngân: <b>{shiftTotal.orders} cốc</b> · Tổng doanh thu ca: <b className="mono">{fmt(shiftTotal.cash + shiftTotal.tf + shiftTotal.card + shiftTotal.grab + shiftTotal.shopee)}</b>
+                Tổng sản lượng thu ngân: <b>{shiftTotal.orders} cốc</b> · Tổng doanh thu ca: <b className="mono">{fmt(shiftTotal.cash + shiftTotal.tf + shiftTotal.card + shiftTotal.grab + shiftTotal.shopee)}</b>
               </div>
             )}
           </div>
         ) : (
           <div style={{ background: '#fafafa', border: '1px dashed #d1d5db', borderRadius: '2px', padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 15 }}>📒</span>
             <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 600 }}>Chưa có ca thu ngân nào kết ca cho ngày {fmtDate(date)} — Vui lòng nhập thủ công.</span>
           </div>
         )}
 
-        <div className="section-label">💰 DOANH THU HOẠT ĐỘNG</div>
-        <FormRow label="💵 Tiền mặt"><NumInput val={cash} set={setCash} placeholder="Ví dụ: 1978500" /></FormRow>
-        <FormRow label="🏦 Chuyển khoản"><NumInput val={tf} set={setTf} placeholder="Ví dụ: 3651800" /></FormRow>
-        <FormRow label="💳 Thẻ ATM / Visa"><NumInput val={card} set={setCard} placeholder="Ví dụ: 1658000" /></FormRow>
-        <FormRow label="🟢 Grab Food"><NumInput val={grab} set={setGrab} placeholder="Ví dụ: 1133000" /></FormRow>
-        <FormRow label="🔶 Shopee Food"><NumInput val={shopee} set={setShopee} placeholder="Ví dụ: 0" /></FormRow>
+        <div className="section-label">DOANH THU HOẠT ĐỘNG</div>
+        <FormRow label="Tiền mặt"><NumInput val={cash} set={setCash} placeholder="Ví dụ: 1978500" /></FormRow>
+        <FormRow label="Chuyển khoản"><NumInput val={tf} set={setTf} placeholder="Ví dụ: 3651800" /></FormRow>
+        <FormRow label="Thẻ ATM / Visa"><NumInput val={card} set={setCard} placeholder="Ví dụ: 1658000" /></FormRow>
+        <FormRow label="Grab Food"><NumInput val={grab} set={setGrab} placeholder="Ví dụ: 1133000" /></FormRow>
+        <FormRow label="Shopee Food"><NumInput val={shopee} set={setShopee} placeholder="Ví dụ: 0" /></FormRow>
         
         <div className="divider" />
         
-        <div className="section-label">📦 GIÁ VỐN NGUYÊN VẬT LIỆU</div>
+        <div className="section-label">GIÁ VỐN NGUYÊN VẬT LIỆU</div>
         <FormRow label="Chi phí nhập nguyên liệu"><NumInput val={goods} set={setGoods} /></FormRow>
         
         <div className="divider" />
         
-        <div className="section-label">📌 CHI PHÍ VẬN HÀNH CỐ ĐỊNH</div>
+        <div className="section-label">CHI PHÍ VẬN HÀNH CỐ ĐỊNH</div>
         {fixed.map(e => (
           <FormRow key={e.id} label={e.category}>
             <NumInput val={e.amount} set={v => updFixed(e.id, 'amount', v)} />
@@ -1044,7 +1043,7 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
         <div className="divider" />
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <span className="section-label" style={{ margin: 0 }}>🗒️ CHI PHÍ PHÁT SINH NGOÀI CA</span>
+          <span className="section-label" style={{ margin: 0 }}>CHI PHÍ PHÁT SINH NGOÀI CA</span>
           <button className="btn btn-gray" style={{ padding: '4px 10px', fontSize: 11, borderRadius: '2px' }} onClick={addOther}>+ Thêm khoản chi</button>
         </div>
         {other.map(e => (
@@ -1058,7 +1057,7 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
         
         <div className="divider" />
         
-        <div className="section-label">💬 GHI CHÚ GIAO BAN</div>
+        <div className="section-label">GHI CHÚ GIAO BAN</div>
         <textarea className="input-field" value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="Ghi chú thêm về thời tiết, tình hình kinh doanh, sự cố thiết bị máy pha cà phê..." style={{ resize: 'vertical', borderRadius: '2px', border: '1px solid #e5e7eb' }} />
       </div>
 
@@ -1066,11 +1065,11 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div className="card" style={{ borderRadius: '2px', border: '1px solid #e5e7eb', background: 'white', padding: '20px', borderTop: '3px solid #1e40af' }}>
           <div className="section-label" style={{ marginBottom: 16 }}>Tóm tắt số liệu dòng tiền</div>
-          <SummaryRow label="💵 Tiền mặt" value={Number(cash) || 0} />
-          <SummaryRow label="🏦 Chuyển khoản" value={Number(tf) || 0} />
-          {(Number(card) || 0) > 0 && <SummaryRow label="💳 Thẻ ATM / Visa" value={Number(card) || 0} />}
-          {(Number(grab) || 0) > 0 && <SummaryRow label="🟢 Grab Food" value={Number(grab) || 0} />}
-          {(Number(shopee) || 0) > 0 && <SummaryRow label="🔶 Shopee Food" value={Number(shopee) || 0} />}
+          <SummaryRow label="Tiền mặt" value={Number(cash) || 0} />
+          <SummaryRow label="Chuyển khoản" value={Number(tf) || 0} />
+          {(Number(card) || 0) > 0 && <SummaryRow label="Thẻ ATM / Visa" value={Number(card) || 0} />}
+          {(Number(grab) || 0) > 0 && <SummaryRow label="Grab Food" value={Number(grab) || 0} />}
+          {(Number(shopee) || 0) > 0 && <SummaryRow label="Shopee Food" value={Number(shopee) || 0} />}
           <div style={{ height: 1, background: '#f1f5f9', margin: '8px 0' }} />
           <SummaryRow label="TỔNG DOANH THU" value={totalRev} color="#1e40af" bold />
           <div style={{ height: 12 }} />
@@ -1085,10 +1084,10 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button className="btn btn-blue" style={{ justifyContent: 'center', padding: 12, fontSize: 13, borderRadius: '2px', fontWeight: 700 }} onClick={() => submit('pending')} disabled={saving}>
-            📤 GỬI BÁO CÁO PHÊ DUYỆT
+            GỬI BÁO CÁO PHÊ DUYỆT
           </button>
           <button className="btn btn-gray" style={{ justifyContent: 'center', padding: 10, fontSize: 12, borderRadius: '2px', fontWeight: 600 }} onClick={() => submit('draft')} disabled={saving}>
-            💾 LƯU NHÁP HỆ THỐNG
+            LƯU NHÁP HỆ THỐNG
           </button>
           {onCancel && <button className="btn btn-outline" style={{ justifyContent: 'center', padding: 10, borderRadius: '2px', fontWeight: 600 }} onClick={onCancel}>HUỶ THAY ĐỔI</button>}
         </div>
@@ -1117,12 +1116,12 @@ const ReportHistory = ({ user, reports, comments, onEdit }) => {
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 18 }}>
               {[
-                ['💵 Tiền mặt', sel.cashRevenue, '#1e40af'],
-                ['🏦 Chuyển khoản', sel.transferRevenue, '#1e40af'],
-                ...(sel.cardRevenue ? [['💳 Thẻ ATM/Visa', sel.cardRevenue, '#1e40af']] : []),
-                ...(sel.grabRevenue ? [['🟢 Grab Food', sel.grabRevenue, '#15803d']] : []),
-                ...(sel.shopeeRevenue ? [['🔶 Shopee Food', sel.shopeeRevenue, '#d97706']] : []),
-                ['📦 Nhập nguyên liệu', sel.goodsCost, '#be123c']
+                ['Tiền mặt', sel.cashRevenue, '#1e40af'],
+                ['Chuyển khoản', sel.transferRevenue, '#1e40af'],
+                ...(sel.cardRevenue ? [['Thẻ ATM/Visa', sel.cardRevenue, '#1e40af']] : []),
+                ...(sel.grabRevenue ? [['Grab Food', sel.grabRevenue, '#15803d']] : []),
+                ...(sel.shopeeRevenue ? [['Shopee Food', sel.shopeeRevenue, '#d97706']] : []),
+                ['Nhập nguyên liệu', sel.goodsCost, '#be123c']
               ].map(([l, v, c]) => (
                 <div key={l} style={{ background: '#f8fafc', borderRadius: '2px', padding: '10px 12px', border: '1px solid #e5e7eb' }}>
                   <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.2 }}>{l}</div>
@@ -1130,7 +1129,7 @@ const ReportHistory = ({ user, reports, comments, onEdit }) => {
                 </div>
               ))}
             </div>
-
+ 
             <div style={{ marginBottom: 16, background: '#f8fafc', padding: 16, borderRadius: '2px', border: '1px solid #e5e7eb' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em' }}>Chi tiết chi phí vận hành ngày</div>
               {(sel.fixedExpenses || []).map(e => (
@@ -1149,7 +1148,7 @@ const ReportHistory = ({ user, reports, comments, onEdit }) => {
 
             {sel.note && (
               <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '2px', padding: '12px 14px', fontSize: 12.5, color: '#1e40af', marginBottom: 16 }}>
-                💬 <b>Ghi chú người lập:</b> {sel.note}
+                Ghi chú người lập: {sel.note}
               </div>
             )}
 
@@ -1157,14 +1156,14 @@ const ReportHistory = ({ user, reports, comments, onEdit }) => {
               <StatusBadge status={sel.status}/>
               {(sel.status === 'rejected' || sel.status === 'draft') && (
                 <button className="btn btn-orange" style={{ padding: '8px 16px', fontSize: 12, borderRadius: '2px', fontWeight: 600 }} onClick={() => { setSel(null); onEdit(sel); }}>
-                  ✏️ Chỉnh sửa lại số liệu ngay
+                  Chỉnh sửa lại số liệu ngay
                 </button>
               )}
             </div>
 
             {selComments.map(c => (
               <div key={c.id} style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '2px', padding: '12px 16px', marginTop: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#c2410c', marginBottom: 4 }}>📌 Yêu cầu phản hồi từ Kế toán viên – {c.createdBy}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#c2410c', marginBottom: 4 }}>Yêu cầu phản hồi từ Kế toán viên – {c.createdBy}</div>
                 <div style={{ fontSize: 12.5, color: '#4b5563', lineHeight: 1.5 }}>{c.content}</div>
                 <div style={{ fontSize: 10, color: '#a1a1aa', marginTop: 4 }} className="mono">{new Date(c.createdAt).toLocaleString('vi-VN')}</div>
               </div>
