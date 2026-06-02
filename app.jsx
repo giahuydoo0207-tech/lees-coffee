@@ -1587,6 +1587,31 @@ const Notifications = ({ user, reports, onEdit }) => {
 
 // ── SHIFT FORM (Staff Cashier beverage selector and Barista raw ingredients checklist) ──
 const ShiftForm = ({ user, page, onSave }) => {
+  // ── 1. STATE & REF DECLARATIONS FIRST (To prevent TDZ errors) ──
+  const [selectedStaffName, setSelectedStaffName] = useState(user?.name || '');
+  const [staffSearch, setStaffSearch] = useState('');
+  const [showStaffDrop, setShowStaffDrop] = useState(false);
+  const staffDropRef = React.useRef(null);
+  
+  const [date, setDate] = useState(todayStr());
+  const [shift, setShift] = useState('morning');
+  const [staffCount, setStaffCount] = useState('');
+  const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
+  
+  // Cashier states
+  const [cashRev, setCashRev] = useState('');
+  const [tfRev, setTfRev] = useState('');
+  const [cardRev, setCardRev] = useState('');
+  const [grabRev, setGrabRev] = useState('');
+  const [shopeeRev, setShopeeRev] = useState('');
+  const [actualCash, setActualCash] = useState('');
+  const [menuItems, setMenuItems] = useState([]);
+  
+  // Search state
+  const [search, setSearch] = useState('');
+  const [showDrop, setShowDrop] = useState(false);
+
   const [catalog, setCatalog] = useState(() => LS.get('lc_catalog', [
     { name: 'Cà Phê Sữa Đá Nguyên Bản', price: 25000, cat: 'coffee', active: true },
     { name: 'Cà Phê Sữa Đá Đậm', price: 30000, cat: 'coffee', active: true },
@@ -1626,8 +1651,32 @@ const ShiftForm = ({ user, page, onSave }) => {
     { name: 'Nước Mía Sầu Riêng', price: 30000, cat: 'juice', active: true },
     { name: 'Nước Mía Kem Muối', price: 20000, cat: 'juice', active: true },
   ]));
-  const activeCatalog = useMemo(() => catalog.filter(c => c.active !== false), [catalog]);
+  
   const [roleType, setRoleType] = useState(page === 'shift_barista' ? 'barista' : 'cashier');
+
+  // ── 2. EFFECTS & COMPUTED VALUES (After states are initialized) ──
+  useEffect(() => {
+    if (user?.name) {
+      setSelectedStaffName(user.name);
+    }
+  }, [user]);
+
+  React.useEffect(() => {
+    const handler = (e) => { if (staffDropRef.current && !staffDropRef.current.contains(e.target)) setShowStaffDrop(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => { setRoleType(page === 'shift_barista' ? 'barista' : 'cashier'); }, [page]);
+
+  const activeCatalog = useMemo(() => catalog.filter(c => c.active !== false), [catalog]);
+  
+  const shiftStaffList = useMemo(() => {
+    const saved = LS.get('lc_mgr_staff_v1', null);
+    const base = Array.isArray(saved) ? saved : DEFAULT_SHIFT_STAFF;
+    return base.filter(s => !EXCLUDED_SHIFT_STAFF.includes(s));
+  }, []);
+
   const currentShiftOrders = useMemo(() => {
     if (!selectedStaffName || !date || !shift || roleType !== 'cashier') return [];
     const allOrders = LS.get('lc_billing_orders', []);
@@ -1658,49 +1707,6 @@ const ShiftForm = ({ user, page, onSave }) => {
       return bTime.localeCompare(aTime);
     });
   }, [selectedStaffName, date, shift, roleType]);
-  useEffect(() => { setRoleType(page === 'shift_barista' ? 'barista' : 'cashier'); }, [page]);
-
-  // Staff check-in name picker
-  const shiftStaffList = useMemo(() => {
-    const saved = LS.get('lc_mgr_staff_v1', null);
-    const base = Array.isArray(saved) ? saved : DEFAULT_SHIFT_STAFF;
-    return base.filter(s => !EXCLUDED_SHIFT_STAFF.includes(s));
-  }, []);
-  const [selectedStaffName, setSelectedStaffName] = useState(user?.name || '');
-  const [staffSearch, setStaffSearch] = useState('');
-  const [showStaffDrop, setShowStaffDrop] = useState(false);
-  const staffDropRef = React.useRef(null);
-
-  useEffect(() => {
-    if (user?.name) {
-      setSelectedStaffName(user.name);
-    }
-  }, [user]);
-
-  React.useEffect(() => {
-    const handler = (e) => { if (staffDropRef.current && !staffDropRef.current.contains(e.target)) setShowStaffDrop(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const [date, setDate] = useState(todayStr());
-  const [shift, setShift] = useState('morning');
-  const [staffCount, setStaffCount] = useState('');
-  const [note, setNote] = useState('');
-  const [saving, setSaving] = useState(false);
-  
-  // Cashier states
-  const [cashRev, setCashRev] = useState('');
-  const [tfRev, setTfRev] = useState('');
-  const [cardRev, setCardRev] = useState('');
-  const [grabRev, setGrabRev] = useState('');
-  const [shopeeRev, setShopeeRev] = useState('');
-  const [actualCash, setActualCash] = useState('');
-  const [menuItems, setMenuItems] = useState([]);
-  
-  // Search state
-  const [search, setSearch] = useState('');
-  const [showDrop, setShowDrop] = useState(false);
 
   // Barista states
   const [ingredients, setIngredients] = useState(() => LS.get('lc_ingredients', [
