@@ -1771,11 +1771,11 @@ const ShiftForm = ({ user, page, onSave }) => {
       setCardRev(foundShift.cardRevenue || '');
       setGrabRev(foundShift.grabRevenue || '');
       setShopeeRev(foundShift.shopeeRevenue || '');
-      setActualCash(
-        foundShift.actualCashRevenue != null 
-          ? String(foundShift.actualCashRevenue) 
-          : (foundShift.actualCashCounted != null ? String(foundShift.actualCashCounted) : '')
-      );
+      const rawVal = foundShift.actualCashRevenue != null 
+        ? String(foundShift.actualCashRevenue) 
+        : (foundShift.actualCashCounted != null ? String(foundShift.actualCashCounted) : '');
+      const formattedVal = rawVal.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      setActualCash(formattedVal);
       setNote(foundShift.note || '');
       setStaffCount(foundShift.staffCount || '');
       if (Array.isArray(foundShift.menuItems)) {
@@ -1861,7 +1861,7 @@ const ShiftForm = ({ user, page, onSave }) => {
     let s = { id: genId(), date, shift, shiftLabel: shiftLabels[shift], staffName: selectedStaffName, roleType, note, staffCount: Number(staffCount) || 0, submittedAt: new Date().toISOString() };
     
     if (roleType === 'cashier') {
-      const actCashVal = actualCash !== '' ? Number(actualCash) : 0;
+      const actCashVal = actualCash !== '' ? Number(actualCash.replace(/\./g, '')) : 0;
       const sysCashVal = Number(cashRev) || 0;
       s = { 
         ...s, 
@@ -1959,10 +1959,14 @@ const ShiftForm = ({ user, page, onSave }) => {
               <label style={{ fontSize: 12.5, fontWeight: 800, color: '#1e40af' }}>Tiền thực tế đếm được</label>
               <div style={{ display: 'flex', alignItems: 'center', position: 'relative', width: '100%' }}>
                 <input 
-                  type="number" 
+                  type="text" 
                   className="input-field mono" 
                   value={actualCash} 
-                  onChange={e => setActualCash(e.target.value)} 
+                  onChange={e => {
+                    const raw = e.target.value.replace(/\D/g, '');
+                    const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    setActualCash(formatted);
+                  }} 
                   placeholder="Nhập số tiền mặt thực tế đếm được..." 
                   style={{ textAlign: 'right', fontWeight: 800, borderRadius: '2px', border: '1.5px solid #1e40af', background: '#eff6ff', color: '#1e40af', fontSize: 13.5, width: '100%', paddingLeft: 110 }} 
                 />
@@ -1978,7 +1982,7 @@ const ShiftForm = ({ user, page, onSave }) => {
                   Vui lòng nhập tiền thực tế để tính chênh lệch
                 </div>
               ) : (() => {
-                const diff = Number(actualCash) - (Number(cashRev) || 0);
+                const diff = Number(actualCash.replace(/\./g, '')) - (Number(cashRev) || 0);
                 const isOver = diff > 0;
                 const isUnder = diff < 0;
                 const absDiff = Math.abs(diff);
