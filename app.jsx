@@ -1265,12 +1265,12 @@ const ReviewList = ({ reports, comments, onUpdate }) => {
             <div style={{ background: '#f8fafc', padding: 16, borderRadius: '2px', border: '1px solid #e5e7eb', marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em' }}>Chi tiết các dòng tài chính giao ban</div>
               {[
-                ['💵 Tiền mặt', sel.cashRevenue, '#1e40af'],
-                ['🏦 Chuyển khoản', sel.transferRevenue, '#1e40af'],
-                ...(sel.cardRevenue ? [['💳 Thẻ ATM / Visa', sel.cardRevenue, '#1e40af']] : []),
-                ...(sel.grabRevenue ? [['🟢 Grab Food', sel.grabRevenue, '#15803d']] : []),
-                ...(sel.shopeeRevenue ? [['🔶 Shopee Food', sel.shopeeRevenue, '#d97706']] : []),
-                ['📦 Nguyên vật liệu (COGS)', -(sel.goodsCost || 0), '#be123c']
+                ['Tiền mặt', sel.cashRevenue, '#1e40af'],
+                ['Chuyển khoản', sel.transferRevenue, '#1e40af'],
+                ...(sel.cardRevenue ? [['Thẻ ATM / Visa', sel.cardRevenue, '#1e40af']] : []),
+                ...(sel.grabRevenue ? [['Grab Food', sel.grabRevenue, '#15803d']] : []),
+                ...(sel.shopeeRevenue ? [['Shopee Food', sel.shopeeRevenue, '#d97706']] : []),
+                ['Nguyên vật liệu (COGS)', -(sel.goodsCost || 0), '#be123c']
               ].map(([l, v, c]) => (
                 <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5, borderBottom: '1px solid #f1f5f9' }}>
                   <span style={{ color: '#475569' }}>{l}</span>
