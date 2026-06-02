@@ -48,6 +48,43 @@ const LS = {
   set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
 };
 
+const getServerTime = async () => {
+  try {
+    const res = await fetch(window.location.href, { method: 'HEAD', cache: 'no-cache' });
+    const dateHeader = res.headers.get('Date');
+    if (dateHeader) return new Date(dateHeader);
+  } catch (e) {
+    console.warn("Failed to get server time from host HEAD, trying public API...", e);
+  }
+  try {
+    const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Ho_Chi_Minh');
+    const data = await res.json();
+    if (data && data.datetime) return new Date(data.datetime);
+  } catch (e) {
+    console.warn("Failed to get server time from WorldTimeAPI, using local time...", e);
+  }
+  return new Date();
+};
+
+const recordLogin = async (name) => {
+  try {
+    const serverTime = await getServerTime();
+    const formattedTime = serverTime.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    const history = LS.get('lc_login_history', []);
+    history.unshift({ name, time: formattedTime });
+    LS.set('lc_login_history', history);
+  } catch (e) {
+    console.error("Failed to record login history", e);
+  }
+};
+
 // ── SEED DATA ──
 const makeSeed = () => {
   return Array.from({ length: 14 }, (_, i) => {
@@ -226,10 +263,12 @@ const LoginPage = ({ onLogin }) => {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      onLogin({ name: name.trim(), role });
-      setLoading(false);
-    }, 600);
+    recordLogin(name.trim()).finally(() => {
+      setTimeout(() => {
+        onLogin({ name: name.trim(), role });
+        setLoading(false);
+      }, 600);
+    });
   };
 
   return (
@@ -1589,6 +1628,30 @@ const ShiftForm = ({ user, page, onSave }) => {
   ]));
   const activeCatalog = useMemo(() => catalog.filter(c => c.active !== false), [catalog]);
   const [roleType, setRoleType] = useState(page === 'shift_barista' ? 'barista' : 'cashier');
+  const currentShiftOrders = useMemo(() => {
+    if (!selectedStaffName || !date || !shift || roleType !== 'cashier') return [];
+    const allOrders = LS.get('lc_billing_orders', []);
+    return allOrders.filter(o => {
+      const isSameStaff = o.cashierName === selectedStaffName;
+      let oDate = o.date;
+      let oShift = o.shift;
+      if (!oDate && o.timestamp) {
+        const parts = o.timestamp.split(', ');
+        if (parts[0]) {
+          const dParts = parts[0].split('/');
+          if (dParts.length === 3) {
+            oDate = `${dParts[2]}-${dParts[1].padStart(2, '0')}-${dParts[0].padStart(2, '0')}`;
+          }
+        }
+        if (parts[1]) {
+          const tParts = parts[1].split(':');
+          const hour = Number(tParts[0]);
+          oShift = hour < 14 ? 'morning' : 'afternoon';
+        }
+      }
+      return isSameStaff && oDate === date && oShift === shift && o.status !== 'cancelled' && o.status !== 'refunded';
+    }).sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+  }, [selectedStaffName, date, shift, roleType]);
   useEffect(() => { setRoleType(page === 'shift_barista' ? 'barista' : 'cashier'); }, [page]);
 
   // Staff check-in name picker
@@ -1626,6 +1689,7 @@ const ShiftForm = ({ user, page, onSave }) => {
   const [cardRev, setCardRev] = useState('');
   const [grabRev, setGrabRev] = useState('');
   const [shopeeRev, setShopeeRev] = useState('');
+  const [actualCash, setActualCash] = useState('');
   const [menuItems, setMenuItems] = useState([]);
   
   // Search state
@@ -1693,6 +1757,7 @@ const ShiftForm = ({ user, page, onSave }) => {
       setCardRev(foundShift.cardRevenue || '');
       setGrabRev(foundShift.grabRevenue || '');
       setShopeeRev(foundShift.shopeeRevenue || '');
+      setActualCash(foundShift.actualCashRevenue != null ? String(foundShift.actualCashRevenue) : '');
       setNote(foundShift.note || '');
       setStaffCount(foundShift.staffCount || '');
       if (foundShift.menuItems) {
@@ -1724,7 +1789,7 @@ const ShiftForm = ({ user, page, onSave }) => {
         }
       }
       
-      return isSameStaff && oDate === date && oShift === shift;
+      return isSameStaff && oDate === date && oShift === shift && o.status !== 'cancelled' && o.status !== 'refunded';
     });
 
     if (shiftOrders.length > 0) {
@@ -1753,6 +1818,7 @@ const ShiftForm = ({ user, page, onSave }) => {
       setCardRev(card || '');
       setGrabRev(grab || '');
       setShopeeRev(shopee || '');
+      setActualCash('');
       setMenuItems(Object.values(itemsMap));
     } else {
       setCashRev('');
@@ -1760,6 +1826,7 @@ const ShiftForm = ({ user, page, onSave }) => {
       setCardRev('');
       setGrabRev('');
       setShopeeRev('');
+      setActualCash('');
       setMenuItems([]);
     }
   }, [selectedStaffName, date, shift, roleType]);
@@ -1771,7 +1838,22 @@ const ShiftForm = ({ user, page, onSave }) => {
     let s = { id: genId(), date, shift, shiftLabel: shiftLabels[shift], staffName: selectedStaffName, roleType, note, staffCount: Number(staffCount) || 0, submittedAt: new Date().toISOString() };
     
     if (roleType === 'cashier') {
-      s = { ...s, orders: totalOrders, cashRevenue: Number(cashRev) || 0, transferRevenue: Number(tfRev) || 0, cardRevenue: Number(cardRev) || 0, grabRevenue: Number(grabRev) || 0, shopeeRevenue: Number(shopeeRev) || 0, totalRevenue: totalRev, menuRevenue, menuItems: menuItems.filter(m => m.qty > 0) };
+      const actCashVal = actualCash !== '' ? Number(actualCash) : 0;
+      const sysCashVal = Number(cashRev) || 0;
+      s = { 
+        ...s, 
+        orders: totalOrders, 
+        cashRevenue: sysCashVal, 
+        transferRevenue: Number(tfRev) || 0, 
+        cardRevenue: Number(cardRev) || 0, 
+        grabRevenue: Number(grabRev) || 0, 
+        shopeeRevenue: Number(shopeeRev) || 0, 
+        totalRevenue: totalRev, 
+        actualCashRevenue: actualCash !== '' ? actCashVal : 0,
+        cashDiscrepancy: actualCash !== '' ? (actCashVal - sysCashVal) : -sysCashVal,
+        menuRevenue, 
+        menuItems: menuItems.filter(m => m.qty > 0) 
+      };
     } else {
       s = { ...s, ingredients: ingredients.filter(i => i.name.trim() !== '') };
     }
@@ -1826,18 +1908,136 @@ const ShiftForm = ({ user, page, onSave }) => {
           <>
             <div className="section-label">Báo cáo tổng kết dòng tiền doanh thu</div>
             {[
-              ['Tiền mặt', cashRev, setCashRev],
-              ['Chuyển khoản', tfRev, setTfRev],
-              ['Thẻ ATM / Visa', cardRev, setCardRev],
-              ['Grab Food', grabRev, setGrabRev],
-              ['Shopee Food', shopeeRev, setShopeeRev]
-            ].map(([lbl, val, set]) => (
-              <div key={lbl} style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 12, alignItems: 'center', marginBottom: 10 }}>
+              ['Tiền mặt hệ thống', cashRev, 'cash'],
+              ['Chuyển khoản hệ thống', tfRev, 'transfer'],
+              ['Thẻ ATM / Visa hệ thống', cardRev, 'card'],
+              ['Grab Food hệ thống', grabRev, 'grab'],
+              ['Shopee Food hệ thống', shopeeRev, 'shopee']
+            ].map(([lbl, val, key]) => (
+              <div key={lbl} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, alignItems: 'center', marginBottom: 10 }}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: '#4b5563' }}>{lbl}</label>
-                <input type="number" className="input-field mono" value={val} onChange={e => set(e.target.value)} placeholder="0" style={{ textAlign: 'right', fontWeight: 500, borderRadius: '2px', border: '1px solid #e5e7eb' }} />
+                <div style={{ display: 'flex', alignItems: 'center', position: 'relative', width: '100%' }}>
+                  <input 
+                    type="text" 
+                    className="input-field mono" 
+                    value={val !== '' ? fmt(Number(val) || 0) : '0 ₫'} 
+                    readOnly 
+                    style={{ textAlign: 'right', fontWeight: 700, borderRadius: '2px', border: '1px solid #cbd5e1', background: '#f1f5f9', color: '#475569', cursor: 'not-allowed', width: '100%' }} 
+                  />
+                  <span style={{ position: 'absolute', left: 10, fontSize: 9, fontWeight: 800, color: '#94a3b8', background: '#e2e8f0', padding: '2px 5px', borderRadius: '2px', textTransform: 'uppercase' }}>HỆ THỐNG</span>
+                </div>
               </div>
             ))}
 
+            <div className="divider" style={{ margin: '16px 0' }} />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+              <label style={{ fontSize: 12.5, fontWeight: 800, color: '#1e40af' }}>Tiền thực tế đếm được</label>
+              <div style={{ display: 'flex', alignItems: 'center', position: 'relative', width: '100%' }}>
+                <input 
+                  type="number" 
+                  className="input-field mono" 
+                  value={actualCash} 
+                  onChange={e => setActualCash(e.target.value)} 
+                  placeholder="Nhập số tiền mặt thực tế đếm được..." 
+                  style={{ textAlign: 'right', fontWeight: 800, borderRadius: '2px', border: '1.5px solid #1e40af', background: '#eff6ff', color: '#1e40af', fontSize: 13.5, width: '100%', paddingLeft: 110 }} 
+                />
+                <span style={{ position: 'absolute', left: 10, fontSize: 9.5, fontWeight: 900, color: 'white', background: '#1e40af', padding: '3.5px 7px', borderRadius: '2px', textTransform: 'uppercase' }}>THỰC TẾ ĐẾM</span>
+              </div>
+            </div>
+
+            {/* Variance calculation */}
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#4b5563' }}>Chênh lệch tiền mặt</label>
+              {actualCash === '' ? (
+                <div style={{ fontSize: 11.5, color: '#6b7280', fontStyle: 'italic', padding: '6px 12px', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '2px', textAlign: 'right' }}>
+                  Vui lòng nhập tiền thực tế để tính chênh lệch
+                </div>
+              ) : (() => {
+                const diff = Number(actualCash) - (Number(cashRev) || 0);
+                const isOver = diff > 0;
+                const isUnder = diff < 0;
+                const absDiff = Math.abs(diff);
+                return (
+                  <div style={{ 
+                    textAlign: 'right', 
+                    fontWeight: 800, 
+                    fontSize: 13, 
+                    padding: '6px 12px', 
+                    borderRadius: '2px',
+                    border: `1.5px solid ${isOver ? '#86efac' : isUnder ? '#fca5a5' : '#cbd5e1'}`, 
+                    background: isOver ? '#f0fdf4' : isUnder ? '#fff1f2' : '#f8fafc', 
+                    color: isOver ? '#15803d' : isUnder ? '#be123c' : '#475569' 
+                  }} className="mono">
+                    {isOver ? `Thừa: +${fmt(absDiff)}` : isUnder ? `Thiếu: -${fmt(absDiff)}` : `Khớp hoàn toàn (0 ₫)`}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="divider" style={{ margin: '16px 0' }} />
+
+            {/* List of transactions in the shift */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
+                DANH SÁCH GIAO DỊCH THÀNH CÔNG TRONG CA ({currentShiftOrders.length})
+              </div>
+              {currentShiftOrders.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '2px', fontSize: 12, color: '#9ca3af' }}>
+                  Không ghi nhận giao dịch thành công nào trong ca trực này.
+                </div>
+              ) : (
+                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '2px' }} className="custom-scrollbar">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5, background: 'white' }}>
+                    <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 5, boxShadow: '0 1px 0 #e5e7eb' }}>
+                      <tr style={{ background: '#f8fafc' }}>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>Mã Đơn</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>Giờ Lập</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>Hình Thức</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'right', color: '#64748b', fontWeight: 700 }}>Số Tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentShiftOrders.map((o, index) => {
+                        const timeStr = o.timestamp ? o.timestamp.split(', ')[1] || o.timestamp : '';
+                        const payBadge = {
+                          cash: ['Tiền mặt', '#1e40af', '#eff6ff', '#bfdbfe'],
+                          transfer: ['Chuyển khoản', '#0369a1', '#e0f2fe', '#bae6fd'],
+                          card: ['Thẻ ATM', '#7c3aed', '#f3e8ff', '#e9d5ff'],
+                          grab: ['Grab', '#15803d', '#f0fdf4', '#bbf7d0'],
+                          shopee: ['Shopee', '#d97706', '#fffbeb', '#fef3c7']
+                        }[o.paymentMethod] || [o.paymentMethod || 'Khác', '#475569', '#f1f5f9', '#e2e8f0'];
+                        
+                        return (
+                          <tr key={o.id || index} style={{ borderBottom: index === currentShiftOrders.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '8px 12px', fontWeight: 600, color: '#0f172a' }} className="mono">{o.id || o.orderId || '—'}</td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center', color: '#64748b' }} className="mono">{timeStr}</td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                              <span style={{ 
+                                display: 'inline-block',
+                                fontSize: 9.5, 
+                                fontWeight: 800, 
+                                color: payBadge[1], 
+                                background: payBadge[2], 
+                                border: `1px solid ${payBadge[3]}`, 
+                                padding: '2px 6px',
+                                borderRadius: '2px',
+                                textTransform: 'uppercase'
+                              }}>
+                                {payBadge[0]}
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }} className="mono">
+                              {fmt(o.discountedSubtotal || o.total || 0)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <>
@@ -2005,6 +2205,29 @@ const ShiftHistory = ({ user }) => {
               </div>
               {/* Right: Staff + Notes */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {s.actualCashRevenue != null && (
+                  <div style={{ background: '#f8fafc', borderRadius: '2px', padding: '12px 14px', border: '1px solid #cbd5e1' }}>
+                    <div style={{ fontSize: 9.5, color: '#1e40af', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>TIỀN MẶT THỰC ĐẾM</div>
+                    <div className="mono" style={{ fontSize: 16, fontWeight: 800, color: '#1e40af' }}>{fmt(s.actualCashRevenue)}</div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 6, borderTop: '1px dashed #cbd5e1', fontSize: 11 }}>
+                      <span style={{ color: '#6b7280', fontWeight: 600 }}>Chênh lệch:</span>
+                      {(() => {
+                        const diff = s.cashDiscrepancy || 0;
+                        const isOver = diff > 0;
+                        const isUnder = diff < 0;
+                        return (
+                          <span style={{ 
+                            fontWeight: 800, 
+                            color: isOver ? '#15803d' : isUnder ? '#be123c' : '#64748b' 
+                          }}>
+                            {isOver ? `Thừa: +${fmt(Math.abs(diff))}` : isUnder ? `Thiếu: -${fmt(Math.abs(diff))}` : 'Khớp'}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
                 <div style={{ background: '#f8fafc', borderRadius: '2px', padding: '12px 14px', border: '1px solid #e5e7eb' }}>
                   <div style={{ fontSize: 9.5, color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>NHÂN SỰ TRỰC CA</div>
                   <div className="mono" style={{ fontSize: 18, fontWeight: 800, color: '#475569' }}>{s.staffCount || 0} <span style={{ fontSize: 12, fontWeight: 600 }}>người</span></div>

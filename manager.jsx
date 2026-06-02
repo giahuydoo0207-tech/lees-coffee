@@ -2249,6 +2249,9 @@ export const MgrStaffList = () => {
   const [error, setError] = useState('');
   const [onLeave, setOnLeave] = useState(() => LS.get('lc_staff_leave', {}));
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState('list'); // 'list' | 'login_history'
+  const [loginHistory, setLoginHistory] = useState(() => LS.get('lc_login_history', []));
+
   const filteredStaff = useMemo(() => {
     return staff.filter(name => name.toLowerCase().includes(search.toLowerCase()));
   }, [staff, search]);
@@ -2282,115 +2285,219 @@ export const MgrStaffList = () => {
     }
   };
 
+  const clearLoginHistory = () => {
+    if (window.confirm("Bạn có chắc chắn muốn xoá toàn bộ lịch sử đăng nhập nhân viên?")) {
+      LS.set('lc_login_history', []);
+      setLoginHistory([]);
+    }
+  };
+
   return (
-    <div className="fade" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
-      {/* Left Column: Staff Table */}
-      <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', overflow: 'hidden' }}>
-        <div style={{ padding: '14px 20px', borderBottom: '1.5px solid #e5e7eb', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ fontSize: 13.5, fontWeight: 900, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              DANH SÁCH NHÂN VIÊN ({staff.length})
-            </h3>
-            <p style={{ fontSize: 11.5, color: '#6b7280', margin: '4px 0 0' }}>Tất cả nhân sự trong phân hệ xếp ca của quán</p>
-          </div>
-          <div style={{ position: 'relative', width: '200px' }}>
-            <input
-              className="input-field"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm tên nhân viên..."
-              style={{ paddingLeft: 30, paddingRight: 8, height: 32, fontSize: 12, borderRadius: '2px' }}
-            />
-            <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-          </div>
-        </div>
-
-        <div style={{ maxHeight: '272px', overflowY: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
-            <thead style={{ position: 'sticky', top: 0, background: '#fafafa', zIndex: 10, boxShadow: '0 1px 0 #e5e7eb' }}>
-              <tr style={{ background: '#fafafa' }}>
-                <th style={{ padding: '10px 20px', textAlign: 'left', color: '#64748b', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>Họ Và Tên</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', color: '#64748b', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', width: 48 }}></th>
-                <th style={{ padding: '10px 20px', textAlign: 'right', width: 80 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredStaff.map((name, idx) => (
-                <tr key={name} style={{ borderBottom: idx === filteredStaff.length - 1 ? 'none' : '1px solid #f1f5f9', background: idx % 2 === 0 ? 'white' : '#fafafa' }} className="table-row-hover">
-                  <td style={{ padding: '12px 20px', fontWeight: 800, color: '#1e40af', fontSize: 13, textTransform: 'uppercase' }}>{name}</td>
-                  <td style={{ padding: '12px 12px', textAlign: 'center' }}>
-                    <span
-                      title={onLeave[name] ? 'Nghỉ phép — bấm để đổi' : 'Đang hoạt động — bấm để đổi'}
-                      onClick={() => toggleLeave(name)}
-                      style={{
-                        display: 'inline-block',
-                        width: 12,
-                        height: 12,
-                        borderRadius: '50%',
-                        background: onLeave[name] ? '#f59e0b' : '#22c55e',
-                        boxShadow: onLeave[name] ? '0 0 0 2px #fef3c7' : '0 0 0 2px #dcfce7',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        transition: 'background 0.2s, box-shadow 0.2s'
-                      }}
-                    />
-                  </td>
-                  <td style={{ padding: '12px 20px', textAlign: 'right' }}>
-                    <button onClick={() => handleRemove(name)} style={{ background: 'none', border: 'none', color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }} title="Xoá nhân viên">
-                      <Trash2 size={14} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredStaff.length === 0 && (
-                <tr>
-                  <td colSpan={3} style={{ padding: '32px', textAlign: 'center', color: '#9ca3af', fontStyle: 'italic' }}>
-                    {staff.length === 0 ? 'Chưa có nhân viên nào trong danh sách. Vui lòng thêm nhân viên mới!' : 'Không tìm thấy nhân viên phù hợp.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+    <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Tab Selector */}
+      <div style={{ display: 'flex', gap: 8, borderBottom: '1.5px solid #cbd5e1', paddingBottom: 8 }}>
+        <button
+          onClick={() => setActiveTab('list')}
+          style={{
+            padding: '6px 14px',
+            borderRadius: '2px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            background: activeTab === 'list' ? '#1e40af' : '#fafafa',
+            color: activeTab === 'list' ? 'white' : '#4b5563',
+            border: activeTab === 'list' ? '1.5px solid #1e40af' : '1.5px solid #cbd5e1',
+            transition: 'all 0.1s'
+          }}
+        >
+          👥 Danh Sách Nhân Viên
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('login_history');
+            setLoginHistory(LS.get('lc_login_history', []));
+          }}
+          style={{
+            padding: '6px 14px',
+            borderRadius: '2px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            background: activeTab === 'login_history' ? '#1e40af' : '#fafafa',
+            color: activeTab === 'login_history' ? 'white' : '#4b5563',
+            border: activeTab === 'login_history' ? '1.5px solid #1e40af' : '1.5px solid #cbd5e1',
+            transition: 'all 0.1s'
+          }}
+        >
+          🕒 Lịch Sử Đăng Nhập
+        </button>
       </div>
 
-      {/* Right Column: Sidebar Add Staff Form */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* Form Add */}
-        <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 18 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#0f0f0e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
-            THÊM NHÂN VIÊN MỚI
-          </div>
-          <form onSubmit={handleAdd}>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5 }}>Họ và tên nhân viên</label>
-              <input type="text" className="input-field" placeholder="Ví dụ: NGUYỄN VĂN AN..." value={newStaffName} onChange={e => setNewStaffName(e.target.value)} required style={{ borderRadius: '2px', padding: '8px 10px', fontSize: 12.5 }} />
-            </div>
-            {error && (
-              <div style={{ fontSize: 11, color: '#be123c', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '2px', padding: '6px 10px', marginBottom: 12, fontWeight: 600 }}>
-                ⚠️ {error}
+      {activeTab === 'list' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
+          {/* Left Column: Staff Table */}
+          <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1.5px solid #e5e7eb', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: 13.5, fontWeight: 900, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  DANH SÁCH NHÂN VIÊN ({staff.length})
+                </h3>
+                <p style={{ fontSize: 11.5, color: '#6b7280', margin: '4px 0 0' }}>Tất cả nhân sự trong phân hệ xếp ca của quán</p>
               </div>
-            )}
-            <button type="submit" className="btn btn-blue" style={{ width: '100%', borderRadius: '2px', fontSize: 12, fontWeight: 700, justifyContent: 'center', height: 36 }}>
-              Thêm Vào Danh Sách
-            </button>
-          </form>
-        </div>
+              <div style={{ position: 'relative', width: '200px' }}>
+                <input
+                  className="input-field"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Tìm tên nhân viên..."
+                  style={{ paddingLeft: 30, paddingRight: 8, height: 32, fontSize: 12, borderRadius: '2px' }}
+                />
+                <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+              </div>
+            </div>
 
-        {/* Sync Info Alert card */}
-        <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: '2px', padding: 16 }}>
-          <div style={{ fontSize: 10.5, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-            LIÊN KẾT BẢNG CÔNG TỰ ĐỘNG
+            <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#fafafa', zIndex: 10, boxShadow: '0 1px 0 #e5e7eb' }}>
+                  <tr style={{ background: '#fafafa' }}>
+                    <th style={{ padding: '10px 20px', textAlign: 'left', color: '#64748b', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>Họ Và Tên</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'center', color: '#64748b', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', width: 48 }}></th>
+                    <th style={{ padding: '10px 20px', textAlign: 'right', width: 80 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStaff.map((name, idx) => (
+                    <tr key={name} style={{ borderBottom: idx === filteredStaff.length - 1 ? 'none' : '1px solid #f1f5f9', background: idx % 2 === 0 ? 'white' : '#fafafa' }} className="table-row-hover">
+                      <td style={{ padding: '12px 20px', fontWeight: 800, color: '#1e40af', fontSize: 13, textTransform: 'uppercase' }}>{name}</td>
+                      <td style={{ padding: '12px 12px', textAlign: 'center' }}>
+                        <span
+                          title={onLeave[name] ? 'Nghỉ phép — bấm để đổi' : 'Đang hoạt động — bấm để đổi'}
+                          onClick={() => toggleLeave(name)}
+                          style={{
+                            display: 'inline-block',
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            background: onLeave[name] ? '#f59e0b' : '#22c55e',
+                            boxShadow: onLeave[name] ? '0 0 0 2px #fef3c7' : '0 0 0 2px #dcfce7',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            transition: 'background 0.2s, box-shadow 0.2s'
+                          }}
+                        />
+                      </td>
+                      <td style={{ padding: '12px 20px', textAlign: 'right' }}>
+                        <button onClick={() => handleRemove(name)} style={{ background: 'none', border: 'none', color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }} title="Xoá nhân viên">
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredStaff.length === 0 && (
+                    <tr>
+                      <td colSpan={3} style={{ padding: '32px', textAlign: 'center', color: '#9ca3af', fontStyle: 'italic' }}>
+                        {staff.length === 0 ? 'Chưa có nhân viên nào trong danh sách. Vui lòng thêm nhân viên mới!' : 'Không tìm thấy nhân viên phù hợp.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <p style={{ fontSize: 11.5, color: '#1e40af', lineHeight: 1.5, margin: 0 }}>
-            Danh sách nhân viên này được <strong>liên kết thời gian thực (Real-time sync)</strong> trực tiếp tới <strong>Bảng Công & Lịch Tuần</strong>.
-          </p>
-          <ul style={{ fontSize: 11, color: '#3b82f6', paddingLeft: 16, marginTop: 8, marginBottom: 0, lineHeight: 1.4 }}>
-            <li style={{ marginBottom: 4 }}>Nhân viên mới thêm sẽ xuất hiện ngay trong ô chọn của nút `+` xếp ca.</li>
-            <li>Bảng kết quả Lịch Tuần (OFF/Lịch ca) sẽ tự động đồng bộ hàng ngang theo danh sách mới này.</li>
-          </ul>
+
+          {/* Right Column: Sidebar Add Staff Form */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Form Add */}
+            <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 18 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#0f0f0e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
+                THÊM NHÂN VIÊN MỚI
+              </div>
+              <form onSubmit={handleAdd}>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5 }}>Họ và tên nhân viên</label>
+                  <input type="text" className="input-field" placeholder="Ví dụ: NGUYỄN VĂN AN..." value={newStaffName} onChange={e => setNewStaffName(e.target.value)} required style={{ borderRadius: '2px', padding: '8px 10px', fontSize: 12.5 }} />
+                </div>
+                {error && (
+                  <div style={{ fontSize: 11, color: '#be123c', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '2px', padding: '6px 10px', marginBottom: 12, fontWeight: 600 }}>
+                    ⚠️ {error}
+                  </div>
+                )}
+                <button type="submit" className="btn btn-blue" style={{ width: '100%', borderRadius: '2px', fontSize: 12, fontWeight: 700, justifyContent: 'center', height: 36 }}>
+                  Thêm Vào Danh Sách
+                </button>
+              </form>
+            </div>
+
+            {/* Sync Info Alert card */}
+            <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: '2px', padding: 16 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                LIÊN KẾT BẢNG CÔNG TỰ ĐỘNG
+              </div>
+              <p style={{ fontSize: 11.5, color: '#1e40af', lineHeight: 1.5, margin: 0 }}>
+                Danh sách nhân viên này được <strong>liên kết thời gian thực (Real-time sync)</strong> trực tiếp tới <strong>Bảng Công & Lịch Tuần</strong>.
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Left Column: Login History Table */
+        <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1.5px solid #e5e7eb', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ fontSize: 13.5, fontWeight: 900, color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                LỊCH SỬ ĐĂNG NHẬP NHÂN VIÊN ({loginHistory.length})
+              </h3>
+              <p style={{ fontSize: 11.5, color: '#6b7280', margin: '4px 0 0' }}>Ghi nhận mốc thời gian đăng nhập thực tế của hệ thống</p>
+            </div>
+            {loginHistory.length > 0 && (
+              <button
+                onClick={clearLoginHistory}
+                style={{
+                  background: '#fff1f2',
+                  border: '1.5px solid #fca5a5',
+                  borderRadius: '2px',
+                  color: '#be123c',
+                  cursor: 'pointer',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  padding: '6px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                <Trash2 size={13} /> Xoá Toàn Bộ Lịch Sử
+              </button>
+            )}
+          </div>
+
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+              <thead style={{ position: 'sticky', top: 0, background: '#fafafa', zIndex: 10, boxShadow: '0 1px 0 #e5e7eb' }}>
+                <tr style={{ background: '#fafafa' }}>
+                  <th style={{ padding: '10px 20px', textAlign: 'left', color: '#64748b', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>Họ Và Tên Nhân Viên</th>
+                  <th style={{ padding: '10px 20px', textAlign: 'right', color: '#64748b', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', width: 280 }}>Thời Gian Đăng Nhập (Server Time)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loginHistory.map((entry, idx) => (
+                  <tr key={idx} style={{ borderBottom: idx === loginHistory.length - 1 ? 'none' : '1px solid #f1f5f9', background: idx % 2 === 0 ? 'white' : '#fafafa' }} className="table-row-hover">
+                    <td style={{ padding: '12px 20px', fontWeight: 800, color: '#1e40af', fontSize: 13, textTransform: 'uppercase' }}>{entry.name}</td>
+                    <td style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 600, color: '#475569' }} className="mono">{entry.time}</td>
+                  </tr>
+                ))}
+                {loginHistory.length === 0 && (
+                  <tr>
+                    <td colSpan={2} style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontStyle: 'italic' }}>
+                      Chưa ghi nhận lượt đăng nhập nào trong hệ thống.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -11,6 +11,43 @@ const LS = {
   set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
 };
 
+const getServerTime = async () => {
+  try {
+    const res = await fetch(window.location.href, { method: 'HEAD', cache: 'no-cache' });
+    const dateHeader = res.headers.get('Date');
+    if (dateHeader) return new Date(dateHeader);
+  } catch (e) {
+    console.warn("Failed to get server time from host HEAD, trying public API...", e);
+  }
+  try {
+    const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Ho_Chi_Minh');
+    const data = await res.json();
+    if (data && data.datetime) return new Date(data.datetime);
+  } catch (e) {
+    console.warn("Failed to get server time from WorldTimeAPI, using local time...", e);
+  }
+  return new Date();
+};
+
+const recordLogin = async (name) => {
+  try {
+    const serverTime = await getServerTime();
+    const formattedTime = serverTime.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    const history = LS.get('lc_login_history', []);
+    history.unshift({ name, time: formattedTime });
+    LS.set('lc_login_history', history);
+  } catch (e) {
+    console.error("Failed to record login history", e);
+  }
+};
+
 // ── ROLES DEFINITION ──
 const ROLES = { 
   order: 'Nhân Viên Gọi Món',
@@ -60,10 +97,12 @@ const POSLoginPage = ({ onLogin }) => {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      onLogin({ name: name.trim(), role });
-      setLoading(false);
-    }, 600);
+    recordLogin(name.trim()).finally(() => {
+      setTimeout(() => {
+        onLogin({ name: name.trim(), role });
+        setLoading(false);
+      }, 600);
+    });
   };
 
   return (
@@ -155,7 +194,6 @@ const POSLoginPage = ({ onLogin }) => {
           />
         </div>
 
-        {/* Custom Role Dropdown */}
         <div ref={dropdownRef} style={{ position: 'relative', marginBottom: 24 }}>
           <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Vị trí trực POS</label>
           <button 
