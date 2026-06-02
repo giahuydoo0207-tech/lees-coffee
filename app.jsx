@@ -1771,7 +1771,11 @@ const ShiftForm = ({ user, page, onSave }) => {
       setCardRev(foundShift.cardRevenue || '');
       setGrabRev(foundShift.grabRevenue || '');
       setShopeeRev(foundShift.shopeeRevenue || '');
-      setActualCash(foundShift.actualCashRevenue != null ? String(foundShift.actualCashRevenue) : '');
+      setActualCash(
+        foundShift.actualCashRevenue != null 
+          ? String(foundShift.actualCashRevenue) 
+          : (foundShift.actualCashCounted != null ? String(foundShift.actualCashCounted) : '')
+      );
       setNote(foundShift.note || '');
       setStaffCount(foundShift.staffCount || '');
       if (Array.isArray(foundShift.menuItems)) {
