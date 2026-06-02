@@ -1631,11 +1631,13 @@ const ShiftForm = ({ user, page, onSave }) => {
   const currentShiftOrders = useMemo(() => {
     if (!selectedStaffName || !date || !shift || roleType !== 'cashier') return [];
     const allOrders = LS.get('lc_billing_orders', []);
-    return allOrders.filter(o => {
+    const safeOrders = Array.isArray(allOrders) ? allOrders.filter(Boolean) : [];
+    return safeOrders.filter(o => {
+      if (!o) return false;
       const isSameStaff = o.cashierName === selectedStaffName;
       let oDate = o.date;
       let oShift = o.shift;
-      if (!oDate && o.timestamp) {
+      if (!oDate && typeof o.timestamp === 'string') {
         const parts = o.timestamp.split(', ');
         if (parts[0]) {
           const dParts = parts[0].split('/');
@@ -1650,7 +1652,11 @@ const ShiftForm = ({ user, page, onSave }) => {
         }
       }
       return isSameStaff && oDate === date && oShift === shift && o.status !== 'cancelled' && o.status !== 'refunded';
-    }).sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    }).sort((a, b) => {
+      const aTime = (a && typeof a.timestamp === 'string') ? a.timestamp : '';
+      const bTime = (b && typeof b.timestamp === 'string') ? b.timestamp : '';
+      return bTime.localeCompare(aTime);
+    });
   }, [selectedStaffName, date, shift, roleType]);
   useEffect(() => { setRoleType(page === 'shift_barista' ? 'barista' : 'cashier'); }, [page]);
 
@@ -1744,7 +1750,9 @@ const ShiftForm = ({ user, page, onSave }) => {
 
     // 1. Check if there is already an accumulated active shift in lc_shifts
     const allShifts = LS.get('lc_shifts', []);
-    const foundShift = allShifts.find(s => 
+    const safeShifts = Array.isArray(allShifts) ? allShifts.filter(Boolean) : [];
+    const foundShift = safeShifts.find(s => 
+      s &&
       s.date === date && 
       s.shift === shift && 
       s.staffName === selectedStaffName &&
@@ -1760,21 +1768,23 @@ const ShiftForm = ({ user, page, onSave }) => {
       setActualCash(foundShift.actualCashRevenue != null ? String(foundShift.actualCashRevenue) : '');
       setNote(foundShift.note || '');
       setStaffCount(foundShift.staffCount || '');
-      if (foundShift.menuItems) {
-        setMenuItems(foundShift.menuItems);
+      if (Array.isArray(foundShift.menuItems)) {
+        setMenuItems(foundShift.menuItems.filter(Boolean));
       }
       return;
     }
 
     // 2. If not found in lc_shifts, calculate in real-time from POS orders in lc_billing_orders
     const allOrders = LS.get('lc_billing_orders', []);
-    const shiftOrders = allOrders.filter(o => {
+    const safeOrders = Array.isArray(allOrders) ? allOrders.filter(Boolean) : [];
+    const shiftOrders = safeOrders.filter(o => {
+      if (!o) return false;
       const isSameStaff = o.cashierName === selectedStaffName;
       
       // Match date & shift (handling fallback parsing for older orders)
       let oDate = o.date;
       let oShift = o.shift;
-      if (!oDate && o.timestamp) {
+      if (!oDate && typeof o.timestamp === 'string') {
         const parts = o.timestamp.split(', ');
         if (parts[0]) {
           const dParts = parts[0].split('/');
@@ -1797,6 +1807,7 @@ const ShiftForm = ({ user, page, onSave }) => {
       let itemsMap = {};
 
       shiftOrders.forEach(o => {
+        if (!o) return;
         const amt = o.discountedSubtotal || o.total || 0;
         if (o.paymentMethod === 'cash') cash += amt;
         else if (o.paymentMethod === 'transfer') tf += amt;
@@ -1804,11 +1815,13 @@ const ShiftForm = ({ user, page, onSave }) => {
         else if (o.paymentMethod === 'grab') grab += amt;
         else if (o.paymentMethod === 'shopee') shopee += amt;
 
-        (o.items || []).forEach(item => {
+        const oItems = Array.isArray(o.items) ? o.items.filter(Boolean) : [];
+        oItems.forEach(item => {
+          if (!item || !item.name) return;
           if (itemsMap[item.name]) {
-            itemsMap[item.name].qty += item.qty;
+            itemsMap[item.name].qty += (item.qty || 0);
           } else {
-            itemsMap[item.name] = { ...item };
+            itemsMap[item.name] = { ...item, qty: item.qty || 0 };
           }
         });
       });
@@ -1857,9 +1870,10 @@ const ShiftForm = ({ user, page, onSave }) => {
     } else {
       s = { ...s, ingredients: ingredients.filter(i => i.name.trim() !== '') };
     }
-    
-    let shifts = LS.get('lc_shifts', []);
+    let rawShifts = LS.get('lc_shifts', []);
+    let shifts = Array.isArray(rawShifts) ? rawShifts.filter(Boolean) : [];
     const existingIdx = shifts.findIndex(item => 
+      item &&
       item.date === date && 
       item.shift === shift && 
       item.staffName === selectedStaffName &&
@@ -1999,14 +2013,15 @@ const ShiftForm = ({ user, page, onSave }) => {
                     </thead>
                     <tbody>
                       {currentShiftOrders.map((o, index) => {
-                        const timeStr = o.timestamp ? o.timestamp.split(', ')[1] || o.timestamp : '';
+                        if (!o) return null;
+                        const timeStr = typeof o.timestamp === 'string' ? o.timestamp.split(', ')[1] || o.timestamp : '';
                         const payBadge = {
                           cash: ['Tiền mặt', '#1e40af', '#eff6ff', '#bfdbfe'],
                           transfer: ['Chuyển khoản', '#0369a1', '#e0f2fe', '#bae6fd'],
                           card: ['Thẻ ATM', '#7c3aed', '#f3e8ff', '#e9d5ff'],
                           grab: ['Grab', '#15803d', '#f0fdf4', '#bbf7d0'],
                           shopee: ['Shopee', '#d97706', '#fffbeb', '#fef3c7']
-                        }[o.paymentMethod] || [o.paymentMethod || 'Khác', '#475569', '#f1f5f9', '#e2e8f0'];
+                        }[o.paymentMethod || ''] || [o.paymentMethod || 'Khác', '#475569', '#f1f5f9', '#e2e8f0'];
                         
                         return (
                           <tr key={o.id || index} style={{ borderBottom: index === currentShiftOrders.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
@@ -2131,10 +2146,15 @@ const ShiftHistory = ({ user }) => {
   const roleFilter = user.role === 'cashier' ? 'cashier' : user.role === 'barista' ? 'barista' : null;
   const shifts = useMemo(() => {
     const all = LS.get('lc_shifts', []);
+    const safeAll = Array.isArray(all) ? all.filter(Boolean) : [];
     const filtered = roleFilter
-      ? all.filter(s => s.roleType === roleFilter)
-      : all.filter(s => s.staffName === user.name);
-    return filtered.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+      ? safeAll.filter(s => s && s.roleType === roleFilter)
+      : safeAll.filter(s => s && s.staffName === user.name);
+    return filtered.sort((a, b) => {
+      const aSub = (a && typeof a.submittedAt === 'string') ? a.submittedAt : '';
+      const bSub = (b && typeof b.submittedAt === 'string') ? b.submittedAt : '';
+      return bSub.localeCompare(aSub);
+    });
   }, [user.name, roleFilter]);
   const shiftColor = { morning: '#0284c7', afternoon: '#d97706', night: '#7c3aed' };
   const shiftBg = { morning: '#e0f2fe', afternoon: '#fef3c7', night: '#ede9fe' };
@@ -2191,17 +2211,22 @@ const ShiftHistory = ({ user }) => {
                   <span className="mono" style={{ color: '#1e40af' }}>{fmt(s.totalRevenue || 0)}</span>
                 </div>
                 {/* Drink items if any */}
-                {(s.menuItems || []).filter(m => m.qty > 0).length > 0 && (
-                  <>
-                    <div style={{ fontSize: 9.5, color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 14, marginBottom: 8 }}>THỐNG KÊ ĐỒ UỐNG BÁN RA</div>
-                    {(s.menuItems || []).filter(m => m.qty > 0).map(m => (
-                      <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f1f5f9', color: '#4b5563' }}>
-                        <span>{m.name} <span style={{ color: '#9ca3af', fontWeight: 600 }}>×{m.qty}</span></span>
-                        <span className="mono" style={{ fontWeight: 600 }}>{fmt(m.qty * (m.price || 0))}</span>
-                      </div>
-                    ))}
-                  </>
-                )}
+                {(() => {
+                  const safeMenuItems = Array.isArray(s.menuItems) ? s.menuItems.filter(Boolean) : [];
+                  const activeItems = safeMenuItems.filter(m => m && m.qty > 0);
+                  if (activeItems.length === 0) return null;
+                  return (
+                    <>
+                      <div style={{ fontSize: 9.5, color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 14, marginBottom: 8 }}>THỐNG KÊ ĐỒ UỐNG BÁN RA</div>
+                      {activeItems.map((m, mIdx) => (
+                        <div key={m.id || mIdx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f1f5f9', color: '#4b5563' }}>
+                          <span>{m.name || 'Món khác'} <span style={{ color: '#9ca3af', fontWeight: 600 }}>×{m.qty || 0}</span></span>
+                          <span className="mono" style={{ fontWeight: 600 }}>{fmt((m.qty || 0) * (m.price || 0))}</span>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
               {/* Right: Staff + Notes */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -324,8 +324,9 @@ export const OrderStep1 = ({ user, setPage }) => {
       localStorage.setItem(queueKey, lastOrderDetails.queueNo.toString());
 
       // ── LINKAGE 1: Thu Ngân ──
-      let shifts = LS.get('lc_shifts', []);
-      let activeShift = shifts.find(s => s.date === today && s.staffName === user.name);
+      let rawShifts = LS.get('lc_shifts', []);
+      let shifts = Array.isArray(rawShifts) ? rawShifts.filter(Boolean) : [];
+      let activeShift = shifts.find(s => s && s.date === today && s.staffName === user.name);
       const discountedSubtotal = lastOrderDetails.discountedSubtotal;
       const paymentMethod = lastOrderDetails.paymentMethod;
       if (activeShift) {
@@ -353,14 +354,18 @@ export const OrderStep1 = ({ user, setPage }) => {
       LS.set('lc_shifts', shifts);
 
       // ── LINKAGE 2: Pha Chế ──
-      let inventory = LS.get('lc_inventory', []);
-      let invLogs = LS.get('lc_inventory_logs', []);
-      lastOrderDetails.items.forEach(cartItem => {
+      let rawInventory = LS.get('lc_inventory', []);
+      let inventory = Array.isArray(rawInventory) ? rawInventory.filter(Boolean) : [];
+      let rawInvLogs = LS.get('lc_inventory_logs', []);
+      let invLogs = Array.isArray(rawInvLogs) ? rawInvLogs.filter(Boolean) : [];
+      const oItems = Array.isArray(lastOrderDetails.items) ? lastOrderDetails.items.filter(Boolean) : [];
+      oItems.forEach(cartItem => {
+        if (!cartItem) return;
         const recipe = INGREDIENT_RECIPES[cartItem.id];
         if (!recipe) return;
         Object.entries(recipe).forEach(([ingredientName, usageAmt]) => {
           const totalUsed = usageAmt * cartItem.qty;
-          const matchedItem = inventory.find(i => i.name.toLowerCase().includes(ingredientName.toLowerCase()));
+          const matchedItem = inventory.find(i => i && typeof i.name === 'string' && i.name.toLowerCase().includes(ingredientName.toLowerCase()));
           if (matchedItem) {
             matchedItem.current = Math.max(0, (matchedItem.current || 0) - totalUsed);
             invLogs.unshift({ id: 'L-' + Math.random().toString(36).slice(2, 9), itemId: matchedItem.id, itemName: matchedItem.name, category: 'export', qty: totalUsed, date: today, operator: user.name, note: `Tự động xuất tiêu hao cho đơn hàng ${lastOrderDetails.orderId}` });
@@ -371,8 +376,9 @@ export const OrderStep1 = ({ user, setPage }) => {
       LS.set('lc_inventory_logs', invLogs);
 
       // ── LINKAGE 3: Quản Lý ──
-      let reports = LS.get('lc_reports', []);
-      let todayReport = reports.find(r => r.date === today);
+      let rawReports = LS.get('lc_reports', []);
+      let reports = Array.isArray(rawReports) ? rawReports.filter(Boolean) : [];
+      let todayReport = reports.find(r => r && r.date === today);
       if (todayReport) {
         if (paymentMethod === 'cash') todayReport.cashRevenue = (todayReport.cashRevenue || 0) + discountedSubtotal;
         else if (paymentMethod === 'transfer') todayReport.transferRevenue = (todayReport.transferRevenue || 0) + discountedSubtotal;
@@ -394,7 +400,8 @@ export const OrderStep1 = ({ user, setPage }) => {
       }
       LS.set('lc_reports', reports);
 
-      const existingOrders = LS.get('lc_billing_orders', []);
+      const rawExistingOrders = LS.get('lc_billing_orders', []);
+      const existingOrders = Array.isArray(rawExistingOrders) ? rawExistingOrders.filter(Boolean) : [];
       existingOrders.unshift(lastOrderDetails);
       LS.set('lc_billing_orders', existingOrders);
     }
