@@ -982,7 +982,7 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
   // ── TổNG HỢP CA THU NGÂN: Đọc shifts của ngày đang chọn ──
   const dayShifts = useMemo(() => {
     const allShifts = LS.get('lc_shifts', []);
-    return allShifts.filter(s => s.date === date && s.roleType === 'cashier');
+    return allShifts.filter(s => s && s.date === date && (s.roleType === 'cashier' || s.roleType === 'order'));
   }, [date]);
 
   const shiftTotal = useMemo(() => ({
@@ -1762,7 +1762,7 @@ const ShiftForm = ({ user, page, onSave }) => {
       s.date === date && 
       s.shift === shift && 
       s.staffName === selectedStaffName &&
-      s.roleType === 'cashier'
+      (s.roleType === 'cashier' || s.roleType === 'order')
     );
 
     if (foundShift) {
@@ -1887,7 +1887,7 @@ const ShiftForm = ({ user, page, onSave }) => {
       item.date === date && 
       item.shift === shift && 
       item.staffName === selectedStaffName &&
-      item.roleType === roleType
+      (item.roleType === roleType || (roleType === 'cashier' && item.roleType === 'order'))
     );
 
     if (existingIdx !== -1) {
