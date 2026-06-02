@@ -7,7 +7,7 @@ import { OrderStep1 } from './OrderStep1.jsx';
 
 // ── LOCAL STORAGE HELPER ──
 const LS = {
-  get: (k, d) => { try { const v = localStorage.getItem(k); return v != null ? JSON.parse(v) : d; } catch { return d; } },
+  get: (k, d) => { try { const v = localStorage.getItem(k); if (v == null) return d; const parsed = JSON.parse(v); return parsed != null ? parsed : d; } catch { return d; } },
   set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
 };
 

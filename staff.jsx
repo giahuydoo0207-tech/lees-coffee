@@ -19,7 +19,7 @@ const fmtDate = d => {
 };
 const genId = () => Math.random().toString(36).slice(2, 9);
 const LS = {
-  get: (k, d) => { try { const v = localStorage.getItem(k); return v != null ? JSON.parse(v) : d; } catch { return d; } },
+  get: (k, d) => { try { const v = localStorage.getItem(k); if (v == null) return d; const parsed = JSON.parse(v); return parsed != null ? parsed : d; } catch { return d; } },
   set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
 };
 

@@ -17,8 +17,8 @@ const fmtDate = d => { if (!d) return ''; const dt = new Date(d+'T00:00:00'); re
 const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const genId = () => Math.random().toString(36).slice(2,9);
 const LS = {
-  get: (k,d) => { try { const v=localStorage.getItem(k); return v!=null?JSON.parse(v):d; } catch { return d; } },
-  set: (k,v) => localStorage.setItem(k,JSON.stringify(v)),
+  get: (k, d) => { try { const v = localStorage.getItem(k); if (v == null) return d; const parsed = JSON.parse(v); return parsed != null ? parsed : d; } catch { return d; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
 };
 
 const calcR = r => {

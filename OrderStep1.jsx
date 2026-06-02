@@ -7,6 +7,12 @@ import {
   Maximize2, Minimize2
 } from 'lucide-react';
 
+// ── LOCAL STORAGE HELPER ──
+const LS = {
+  get: (k, d) => { try { const v = localStorage.getItem(k); if (v == null) return d; const parsed = JSON.parse(v); return parsed != null ? parsed : d; } catch { return d; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+};
+
 // ── HARDCODED SAMPLE ITEMS ──
 const SAMPLE_ITEMS = [
   // --- COFFEE SIGNATURE ---
@@ -288,7 +294,7 @@ export const OrderStep1 = ({ user, setPage }) => {
     setPage(defPage[user.role] || 'dashboard');
   };
 
-  const handleLogout = () => { localStorage.setItem('lc_user', null); window.location.reload(); };
+  const handleLogout = () => { LS.set('lc_user', null); window.location.reload(); };
 
   const handleConfirmOrder = () => {
     if (cart.length === 0) return;
@@ -318,8 +324,7 @@ export const OrderStep1 = ({ user, setPage }) => {
       localStorage.setItem(queueKey, lastOrderDetails.queueNo.toString());
 
       // ── LINKAGE 1: Thu Ngân ──
-      const rawShifts = localStorage.getItem('lc_shifts');
-      let shifts = rawShifts ? JSON.parse(rawShifts) : [];
+      let shifts = LS.get('lc_shifts', []);
       let activeShift = shifts.find(s => s.date === today && s.staffName === user.name);
       const discountedSubtotal = lastOrderDetails.discountedSubtotal;
       const paymentMethod = lastOrderDetails.paymentMethod;
@@ -345,13 +350,11 @@ export const OrderStep1 = ({ user, setPage }) => {
           note: 'Tạo tự động từ Quầy Gọi Món POS.', submittedAt: new Date().toISOString()
         });
       }
-      localStorage.setItem('lc_shifts', JSON.stringify(shifts));
+      LS.set('lc_shifts', shifts);
 
       // ── LINKAGE 2: Pha Chế ──
-      const rawInv = localStorage.getItem('lc_inventory');
-      const rawInvLogs = localStorage.getItem('lc_inventory_logs');
-      let inventory = rawInv ? JSON.parse(rawInv) : [];
-      let invLogs = rawInvLogs ? JSON.parse(rawInvLogs) : [];
+      let inventory = LS.get('lc_inventory', []);
+      let invLogs = LS.get('lc_inventory_logs', []);
       lastOrderDetails.items.forEach(cartItem => {
         const recipe = INGREDIENT_RECIPES[cartItem.id];
         if (!recipe) return;
@@ -364,12 +367,11 @@ export const OrderStep1 = ({ user, setPage }) => {
           }
         });
       });
-      localStorage.setItem('lc_inventory', JSON.stringify(inventory));
-      localStorage.setItem('lc_inventory_logs', JSON.stringify(invLogs));
+      LS.set('lc_inventory', inventory);
+      LS.set('lc_inventory_logs', invLogs);
 
       // ── LINKAGE 3: Quản Lý ──
-      const rawReports = localStorage.getItem('lc_reports');
-      let reports = rawReports ? JSON.parse(rawReports) : [];
+      let reports = LS.get('lc_reports', []);
       let todayReport = reports.find(r => r.date === today);
       if (todayReport) {
         if (paymentMethod === 'cash') todayReport.cashRevenue = (todayReport.cashRevenue || 0) + discountedSubtotal;
@@ -390,11 +392,11 @@ export const OrderStep1 = ({ user, setPage }) => {
           note: 'Báo cáo doanh thu tích luỹ từ POS.', status: 'approved', submittedAt: new Date().toISOString()
         });
       }
-      localStorage.setItem('lc_reports', JSON.stringify(reports));
+      LS.set('lc_reports', reports);
 
-      const existingOrders = JSON.parse(localStorage.getItem('lc_billing_orders') || '[]');
+      const existingOrders = LS.get('lc_billing_orders', []);
       existingOrders.unshift(lastOrderDetails);
-      localStorage.setItem('lc_billing_orders', JSON.stringify(existingOrders));
+      LS.set('lc_billing_orders', existingOrders);
     }
 
     clearCart(); setPaymentMethod('cash'); setShowSuccessModal(false);
