@@ -1,6 +1,6 @@
 {
-  "short_name": "LeesPOS",
-  "name": "Lee's Coffee POS Terminal",
+  "short_name": "Bizcafe",
+  "name": "Bizcafe POS Terminal",
   "start_url": ".",
   "display": "standalone",
   "orientation": "landscape",

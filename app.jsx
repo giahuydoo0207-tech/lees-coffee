@@ -321,10 +321,10 @@ const LoginPage = ({ onLogin }) => {
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <img 
             src="https://theme.hstatic.net/200000885783/1001244158/14/logo.png?v=745"
-            alt="Lee's Coffee"
+            alt="Bizcafe"
             style={{ width: "85px", objectFit: "contain", margin: "0 auto 8px", display: "block", mixBlendMode: "multiply" }}
           />
-          <h1 style={{ color: '#0f0f0e', fontSize: 22, fontWeight: 900, letterSpacing: '0.08em', marginBottom: 4 }}>LEE'S COFFEE</h1>
+          <h1 style={{ color: '#0f0f0e', fontSize: 22, fontWeight: 900, letterSpacing: '0.08em', marginBottom: 4 }}>BIZCAFE</h1>
           <p style={{ color: '#9ca3af', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.12em', uppercase: 'true' }}>HỆ THỐNG QUẢN LÝ TÀI CHÍNH NỘI BỘ</p>
         </div>
 
@@ -643,10 +643,10 @@ const Layout = ({ user, page, setPage, pendingCount, rejectCount, children }) =>
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <span style={{ color: 'white', fontWeight: 900, fontSize: 13, letterSpacing: '0.05em' }}>LC</span>
+              <span style={{ color: 'white', fontWeight: 900, fontSize: 13, letterSpacing: '0.05em' }}>BZ</span>
             </div>
             <div>
-              <div style={{ color: 'white', fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.01em', lineHeight: 1.2 }}>Lee's Coffee</div>
+              <div style={{ color: 'white', fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.01em', lineHeight: 1.2 }}>Bizcafe</div>
               <div style={{ color: '#5c5c58', fontSize: 8.5, marginTop: 2, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>TÀI CHÍNH NỘI BỘ</div>
             </div>
           </div>
@@ -707,7 +707,7 @@ const Layout = ({ user, page, setPage, pendingCount, rejectCount, children }) =>
         <div className="topbar" style={{ height: 52, background: 'white', borderBottom: '1px solid #e5e7eb', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Breadcrumb path */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-            <span style={{ color: '#9ca3af', fontWeight: 500 }}>Lee's Coffee</span>
+            <span style={{ color: '#9ca3af', fontWeight: 500 }}>Bizcafe</span>
             <ChevronRight size={11} className="text-[#d1d5db]" strokeWidth={1.5} />
             <span style={{ fontWeight: 600, color: '#1a1a1a' }}>{PAGE_TITLE[page] || 'Tổng Quan'}</span>
           </div>
