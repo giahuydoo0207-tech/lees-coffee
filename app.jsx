@@ -307,23 +307,24 @@ const LoginPage = ({ onLogin }) => {
       }}></div>
 
       <div className="fade" style={{
-        background: 'rgba(255, 255, 255, 0.94)',
-        borderRadius: '2px', // Sharp border-radius
-        padding: '24px 32px 32px',
+        background: 'rgba(13, 22, 45, 0.75)',
+        borderRadius: '12px',
+        padding: '28px 32px 32px',
         width: '100%',
         maxWidth: 450,
-        boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.3)',
-        border: '1px solid rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(10px)',
+        boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.07)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(20px)',
         position: 'relative',
         zIndex: 1
       }}>
-        <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          {/* BizCafe Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 10 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          {/* BizCafe Brand Logo – Dark Version */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 12 }}>
             {/* Icon B */}
             <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="58" height="58" rx="13" fill="#111827"/>
+              <rect width="58" height="58" rx="13" fill="#C8963E" opacity="0.15"/>
+              <rect x="2" y="2" width="54" height="54" rx="11" fill="#111827"/>
               {/* B letter */}
               <text x="10" y="43" fontFamily="Georgia, 'Times New Roman', serif" fontSize="36" fontWeight="700" fill="#C8963E">B</text>
               {/* Small dot */}
@@ -331,23 +332,23 @@ const LoginPage = ({ onLogin }) => {
             </svg>
             {/* Wordmark */}
             <div style={{ textAlign: 'left' }}>
-              <div style={{ lineHeight: 1.1, marginBottom: 3 }}>
-                <span style={{ color: '#111827', fontSize: 26, fontWeight: 900, letterSpacing: '-0.01em' }}>Biz</span>
-                <span style={{ color: '#C8963E', fontSize: 26, fontWeight: 900, letterSpacing: '-0.01em' }}>Cafe</span>
+              <div style={{ lineHeight: 1.1, marginBottom: 4 }}>
+                <span style={{ color: '#ffffff', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>Biz</span>
+                <span style={{ color: '#C8963E', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>Cafe</span>
               </div>
-              <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#6B7280', textTransform: 'uppercase' }}>BUSINESS MANAGEMENT</div>
+              <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#C8963E', textTransform: 'uppercase', opacity: 0.8 }}>BUSINESS MANAGEMENT</div>
             </div>
           </div>
-          <p style={{ color: '#9ca3af', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>HỆ THỐNG QUẢN LÝ TÀI CHÍNH NỘI BỘ</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>HỆ THỐNG QUẢN LÝ TÀI CHÍNH NỘI BỘ</p>
         </div>
 
         {error && (
           <div style={{
-            background: '#fff1f2',
-            border: '1.5px solid #fca5a5',
-            color: '#be123c',
+            background: 'rgba(190, 18, 60, 0.15)',
+            border: '1.5px solid rgba(252, 165, 165, 0.4)',
+            color: '#fca5a5',
             padding: '8px 12px',
-            borderRadius: '2px',
+            borderRadius: '6px',
             fontSize: 11.5,
             fontWeight: 700,
             marginBottom: 16,
@@ -362,100 +363,81 @@ const LoginPage = ({ onLogin }) => {
 
         {/* Custom Role Dropdown - FIRST */}
         <div ref={dropdownRef} style={{ position: 'relative', marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Vị trí việc làm</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Vị trí việc làm</label>
           <button 
             type="button"
             onClick={() => setIsOpen(!isOpen)}
             style={{
               width: '100%',
               padding: '10px 14px',
-              background: '#ffffff',
-              border: '1.5px solid #e5e7eb',
-              borderRadius: '2px',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1.5px solid rgba(255,255,255,0.12)',
+              borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              transition: 'all 0.1s ease',
+              transition: 'all 0.15s ease',
               outline: 'none',
+              color: 'white'
             }}
           >
             {selectedRoleObj ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '2px',
-                  background: '#eff6ff',
-                  color: '#1e40af',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 800,
-                  fontSize: 10,
-                  border: '1px solid #bfdbfe'
+                  width: 24, height: 24, borderRadius: '4px',
+                  background: 'rgba(200,150,62,0.2)',
+                  color: '#C8963E',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 800, fontSize: 10,
+                  border: '1px solid rgba(200,150,62,0.3)'
                 }}>
                   {selectedRoleObj.icon}
                 </div>
-                <span style={{ fontWeight: 700, fontSize: 13, color: '#1f2937' }}>{selectedRoleObj.label}</span>
+                <span style={{ fontWeight: 700, fontSize: 13, color: 'white' }}>{selectedRoleObj.label}</span>
               </div>
             ) : (
-              <span style={{ color: '#9ca3af', fontSize: 12.5 }}>Chọn vị trí việc làm của bạn...</span>
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12.5 }}>Chọn vị trí việc làm của bạn...</span>
             )}
-            {isOpen ? <ChevronUp size={16} style={{ color: '#6b7280' }} /> : <ChevronDown size={16} style={{ color: '#6b7280' }} />}
+            {isOpen ? <ChevronUp size={16} style={{ color: 'rgba(255,255,255,0.5)' }} /> : <ChevronDown size={16} style={{ color: 'rgba(255,255,255,0.5)' }} />}
           </button>
 
           {isOpen && (
             <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              background: 'white',
-              border: '1.5px solid #0f0f0e',
-              borderRadius: '2px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-              zIndex: 50,
-              marginTop: 4,
-              maxHeight: 135,
-              overflowY: 'auto',
-              padding: '4px 0'
+              position: 'absolute', top: '100%', left: 0, right: 0,
+              background: '#0f1829',
+              border: '1.5px solid rgba(255,255,255,0.12)',
+              borderRadius: '8px',
+              boxShadow: '0 16px 32px rgba(0,0,0,0.4)',
+              zIndex: 50, marginTop: 6,
+              maxHeight: 145, overflowY: 'auto',
+              padding: '6px 0'
             }}>
               {roles.map(r => (
                 <div 
                   key={r.key} 
                   onMouseDown={() => { setRole(r.key); setIsOpen(false); setError(''); }}
                   style={{
-                    padding: '0 14px',
-                    height: 44,
-                    minHeight: 44,
+                    padding: '0 14px', height: 44, minHeight: 44,
                     cursor: 'pointer',
-                    background: role === r.key ? '#f8fafc' : 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
+                    background: role === r.key ? 'rgba(200,150,62,0.12)' : 'transparent',
+                    display: 'flex', alignItems: 'center', gap: 12,
                     transition: 'background 0.1s'
                   }}
-                  className="hover:bg-blue-50"
                 >
                   <div style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: '2px',
-                    background: role === r.key ? '#1e40af' : '#fafafa',
-                    color: role === r.key ? 'white' : '#6b7280',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: 10.5,
-                    border: '1px solid #e5e7eb',
+                    width: 26, height: 26, borderRadius: '4px',
+                    background: role === r.key ? 'rgba(200,150,62,0.25)' : 'rgba(255,255,255,0.06)',
+                    color: role === r.key ? '#C8963E' : '#6b7280',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 800, fontSize: 10.5,
+                    border: '1px solid rgba(255,255,255,0.08)',
                     flexShrink: 0
                   }}>
                     {r.icon}
                   </div>
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 700, fontSize: 12.5, color: '#1f2937', whiteSpace: 'nowrap' }}>{r.label}</span>
+                    <span style={{ fontWeight: 700, fontSize: 12.5, color: role === r.key ? '#C8963E' : 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>{r.label}</span>
                   </div>
                 </div>
               ))}
@@ -465,19 +447,19 @@ const LoginPage = ({ onLogin }) => {
 
         {/* Name Input - SECOND */}
         <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Họ và tên nhân viên</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 6, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Họ và tên nhân viên</label>
           <input 
             className="input-field" 
             value={name} 
             onChange={e => { setName(e.target.value); setError(''); }} 
             placeholder="Nhập đầy đủ họ tên (không viết tắt)..." 
-            style={{ borderRadius: '2px', padding: '10px 14px', border: '1.5px solid #e5e7eb' }} 
+            style={{ borderRadius: '8px', padding: '10px 14px', border: '1.5px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: 'white', outline: 'none' }} 
           />
         </div>
 
         {/* Password Input - THIRD */}
         <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Mật khẩu đăng nhập</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 6, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Mật khẩu đăng nhập</label>
           <div style={{ position: 'relative' }}>
             <input 
               type={showPassword ? 'text' : 'password'}
@@ -485,55 +467,45 @@ const LoginPage = ({ onLogin }) => {
               value={password} 
               onChange={e => { setPassword(e.target.value); setError(''); }} 
               placeholder="••••••••" 
-              style={{ borderRadius: '2px', padding: '10px 40px 10px 14px', border: '1.5px solid #e5e7eb', background: '#fafafa', width: '100%' }} 
+              style={{ borderRadius: '8px', padding: '10px 44px 10px 14px', border: '1.5px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: 'white', width: '100%', outline: 'none' }} 
             />
             <button 
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               style={{
-                position: 'absolute',
-                right: 12,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#4b5563',
-                fontSize: '11px',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'rgba(255,255,255,0.45)', fontSize: '11px', fontWeight: 600,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
               }}
             >
               {showPassword ? 'Ẩn' : 'Hiện'}
             </button>
           </div>
-          <div style={{ fontSize: 10.5, color: '#6b7280', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
-            <span>Mật khẩu thử nghiệm dùng chung cho tất cả vai trò: <strong className="mono">123456</strong></span>
+          <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.3)', marginTop: 6, fontWeight: 500 }}>
+            <span>Mật khẩu thử nghiệm dùng chung cho tất cả vai trò: <strong className="mono" style={{ color: 'rgba(255,255,255,0.55)' }}>123456</strong></span>
           </div>
         </div>
 
         <button 
-          className="btn btn-blue" 
           style={{
             width: '100%',
-            padding: '12px',
-            borderRadius: '2px',
+            padding: '13px',
+            borderRadius: '8px',
             border: 'none',
-            background: '#1e40af',
-            color: 'white',
+            background: 'linear-gradient(135deg, #C8963E 0%, #d4a843 100%)',
+            color: '#111827',
             fontSize: '13px',
-            fontWeight: 800,
-            letterSpacing: '0.03em',
+            fontWeight: 900,
+            letterSpacing: '0.06em',
             cursor: loading ? 'wait' : 'pointer',
-            transition: 'all 0.15s'
+            transition: 'all 0.15s',
+            boxShadow: '0 4px 20px rgba(200,150,62,0.35)'
           }}
           onClick={handleLogin}
           disabled={loading}
         >
-          {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+          {loading ? 'Đang đăng nhập...' : 'ĐĂNG NHẬP'}
         </button>
         {error && (
           <p style={{ color: '#be123c', fontSize: '11px', marginTop: '6px',
