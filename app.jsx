@@ -319,13 +319,26 @@ const LoginPage = ({ onLogin }) => {
         zIndex: 1
       }}>
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <img 
-            src="https://theme.hstatic.net/200000885783/1001244158/14/logo.png?v=745"
-            alt="Bizcafe"
-            style={{ width: "85px", objectFit: "contain", margin: "0 auto 8px", display: "block", mixBlendMode: "multiply" }}
-          />
-          <h1 style={{ color: '#0f0f0e', fontSize: 22, fontWeight: 900, letterSpacing: '0.08em', marginBottom: 4 }}>BIZCAFE</h1>
-          <p style={{ color: '#9ca3af', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.12em', uppercase: 'true' }}>HỆ THỐNG QUẢN LÝ TÀI CHÍNH NỘI BỘ</p>
+          {/* BizCafe Brand Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 10 }}>
+            {/* Icon B */}
+            <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="58" height="58" rx="13" fill="#111827"/>
+              {/* B letter */}
+              <text x="10" y="43" fontFamily="Georgia, 'Times New Roman', serif" fontSize="36" fontWeight="700" fill="#C8963E">B</text>
+              {/* Small dot */}
+              <circle cx="43" cy="15" r="4.5" fill="#C8963E"/>
+            </svg>
+            {/* Wordmark */}
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ lineHeight: 1.1, marginBottom: 3 }}>
+                <span style={{ color: '#111827', fontSize: 26, fontWeight: 900, letterSpacing: '-0.01em' }}>Biz</span>
+                <span style={{ color: '#C8963E', fontSize: 26, fontWeight: 900, letterSpacing: '-0.01em' }}>Cafe</span>
+              </div>
+              <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#6B7280', textTransform: 'uppercase' }}>BUSINESS MANAGEMENT</div>
+            </div>
+          </div>
+          <p style={{ color: '#9ca3af', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>HỆ THỐNG QUẢN LÝ TÀI CHÍNH NỘI BỘ</p>
         </div>
 
         {error && (
@@ -634,16 +647,29 @@ const Layout = ({ user, page, setPage, pendingCount, rejectCount, children }) =>
         {/* Brand Header */}
         <div style={{ padding: '20px 18px', borderBottom: '1px solid #252523' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Coffee Cup Icon */}
             <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: '2px', // Sharp
-              background: '#1e40af', // AvantiOS Navy Accent
+              width: 34,
+              height: 34,
+              borderRadius: '8px',
+              background: '#111827',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              flexShrink: 0
             }}>
-              <span style={{ color: 'white', fontWeight: 900, fontSize: 13, letterSpacing: '0.05em' }}>BZ</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Steam lines */}
+                <path d="M8.5 2 C8.5 2 9 1 8.5 0" stroke="#C8963E" strokeWidth="1.4" strokeLinecap="round"/>
+                <path d="M11.5 2 C11.5 2 12 1 11.5 0" stroke="#C8963E" strokeWidth="1.4" strokeLinecap="round"/>
+                <path d="M14.5 2 C14.5 2 15 1 14.5 0" stroke="#C8963E" strokeWidth="1.4" strokeLinecap="round"/>
+                {/* Cup body */}
+                <path d="M5 5h14l-1.5 10.5a1 1 0 0 1-1 .9H7.5a1 1 0 0 1-1-.9L5 5z" fill="white"/>
+                {/* Handle */}
+                <path d="M19 7h1.5a1.5 1.5 0 0 1 0 3H19" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                {/* Saucer */}
+                <ellipse cx="12" cy="17.5" rx="6.5" ry="1.3" fill="white"/>
+              </svg>
             </div>
             <div>
               <div style={{ color: 'white', fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.01em', lineHeight: 1.2 }}>Bizcafe</div>
