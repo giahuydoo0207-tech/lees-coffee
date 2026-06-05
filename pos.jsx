@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { 
-  ChevronDown, ChevronUp, Lock, User, RefreshCw, Check, LogOut 
+  ChevronDown, ChevronUp, Lock, User, RefreshCw, Check, LogOut, Eye, EyeOff 
 } from 'lucide-react';
 import { OrderStep1 } from './OrderStep1.jsx';
 
@@ -62,6 +62,7 @@ const ROLES = {
 const POSLoginPage = ({ onLogin }) => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -236,23 +237,40 @@ const POSLoginPage = ({ onLogin }) => {
           {/* Password Input */}
           <div style={{ marginBottom: 24 }}>
             <label style={labelStyle}>Mật khẩu đăng nhập</label>
-            <input 
-              type="password"
-              className="input-field mono" 
-              value={password} 
-              onChange={e => { setPassword(e.target.value); setError(''); }} 
-              placeholder="••••••••" 
-              style={{ 
-                width: '100%',
-                padding: '12px 16px',
-                background: '#2D2D2D',
-                border: 'none',
-                borderRadius: '6px',
-                color: '#FFFFFF',
-                fontSize: '13px',
-                outline: 'none'
-              }} 
-            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showPassword ? 'text' : 'password'}
+                className="input-field mono" 
+                value={password} 
+                onChange={e => { setPassword(e.target.value); setError(''); }} 
+                placeholder="••••••••" 
+                style={{ 
+                  width: '100%',
+                  padding: '12px 44px 12px 16px',
+                  background: '#2D2D2D',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: '#FFFFFF',
+                  fontSize: '13px',
+                  outline: 'none'
+                }} 
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: '#000000',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 8, fontWeight: 500 }}>
               <span>Mật khẩu dùng chung: <strong className="mono" style={{ color: '#4B5563' }}>123456</strong></span>
             </div>

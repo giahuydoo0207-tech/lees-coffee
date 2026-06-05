@@ -784,11 +784,14 @@ const LoginPage = ({ onLogin, module, onBack }) => {
                 style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: 600,
-                  padding: 0
+                  color: '#000000',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
-                {showPassword ? 'Ẩn' : 'Hiện'}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
             <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 8, fontWeight: 500 }}>
