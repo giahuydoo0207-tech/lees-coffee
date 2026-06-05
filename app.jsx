@@ -2622,12 +2622,7 @@ const App = () => {
   useEffect(() => { LS.set('lc_reports', reports); }, [reports]);
   useEffect(() => { LS.set('lc_comments', comments); }, [comments]);
 
-  const login = (u) => { 
-    LS.set('lc_user', u); 
-    setUser(u); 
-    const defPage = { director: 'dashboard', accountant: 'dashboard', manager: 'report', staff: 'shift_cashier', cashier: 'shift_cashier', barista: 'shift_barista' };
-    setPage(defPage[u.role] || 'dashboard');
-  };
+
 
   const saveReport = (rep) => {
     setReports(prev => { const exists = prev.find(r => r.id === rep.id); return exists ? prev.map(r => r.id === rep.id ? rep : r) : [rep, ...prev]; });
