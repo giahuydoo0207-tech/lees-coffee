@@ -646,22 +646,27 @@ const LoginPage = ({ onLogin, module, onBack }) => {
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             {/* BizCafe Brand Logo */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 12 }}>
-              {/* Icon B */}
-              <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="58" height="58" rx="13" fill="#C8963E" opacity="0.15"/>
-                <rect x="2" y="2" width="54" height="54" rx="11" fill="#111827"/>
-                {/* B letter */}
-                <text x="10" y="43" fontFamily="Georgia, 'Times New Roman', serif" fontSize="36" fontWeight="700" fill="#C8963E">B</text>
-                {/* Small dot */}
-                <circle cx="43" cy="15" r="4.5" fill="#C8963E"/>
-              </svg>
+              {/* Icon people */}
+              <div style={{
+                width: 58, height: 58, borderRadius: 13,
+                background: '#1E3A8A',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 16px rgba(30,58,138,0.3)', flexShrink: 0
+              }}>
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="15.5" cy="7.5" r="2.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                  <path d="M11 19c0-2.5 2-4.5 4.5-4.5S20 16.5 20 19" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="9" cy="8" r="3" stroke="white" strokeWidth="1.7" strokeLinecap="round"/>
+                  <path d="M4 19c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               {/* Wordmark */}
               <div style={{ textAlign: 'left' }}>
                 <div style={{ lineHeight: 1.1, marginBottom: 4 }}>
-                  <span style={{ color: '#111827', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>Biz</span>
-                  <span style={{ color: '#C8963E', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>Cafe</span>
+                  <span style={{ color: '#60A5FA', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>Biz</span>
+                  <span style={{ color: '#1E3A8A', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>Cafe</span>
                 </div>
-                <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#C8963E', textTransform: 'uppercase', opacity: 0.8 }}>BUSINESS MANAGEMENT</div>
+                <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#1E3A8A', textTransform: 'uppercase', opacity: 0.7 }}>BUSINESS MANAGEMENT</div>
               </div>
             </div>
             <p style={{ color: '#9CA3AF', fontSize: 10, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>HỆ THỐNG QUẢN LÝ TÀI CHÍNH NỘI BỘ</p>
