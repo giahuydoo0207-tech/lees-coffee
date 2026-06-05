@@ -290,7 +290,23 @@ const ModuleSelector = ({ onSelect }) => {
       shadow: 'rgba(30, 58, 138, 0.08)',
       selectedShadow: 'rgba(30, 58, 138, 0.15)',
       icon: (
-        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 24, color: '#1E3A8A' }}>B</span>
+        <div style={{
+          width: 44, height: 44, borderRadius: 11,
+          background: '#1E3A8A',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(30,58,138,0.25)'
+        }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Head - user 1 (back) */}
+            <circle cx="15.5" cy="7.5" r="2.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+            {/* Body - user 1 (back) */}
+            <path d="M11 19c0-2.5 2-4.5 4.5-4.5S20 16.5 20 19" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Head - user 2 (front) */}
+            <circle cx="9" cy="8" r="3" stroke="white" strokeWidth="1.7" strokeLinecap="round"/>
+            {/* Body - user 2 (front) */}
+            <path d="M4 19c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
       ),
     },
     {
