@@ -60,32 +60,11 @@ const ROLES = {
 
 // ── STANDALONE POS LOGIN PAGE ──
 const POSLoginPage = ({ onLogin }) => {
-  const [role, setRole] = useState('order'); // Default to POS role
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const dropdownRef = useRef(null);
 
-  const roles = [
-    { key: 'order', icon: 'OD', label: 'Nhân Viên Gọi Món', desc: 'Quầy gọi món & tính tiền POS' },
-    { key: 'cashier', icon: 'TN', label: 'Thu Ngân Ca', desc: 'Kết ca doanh thu & bàn giao két' },
-    { key: 'barista', icon: 'PC', label: 'Pha Chế Ca', desc: 'Kiểm kê và bàn giao nguyên liệu' },
-    { key: 'manager', icon: 'QL', label: 'Quản Lý Quán', desc: 'Giám sát hoạt động & kê khai ngày' }
-  ];
-
-  useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, []);
-
-  const selectedRoleObj = roles.find(r => r.key === role);
   const canLogin = name.trim() && password;
 
   const handleLogin = () => {
@@ -99,7 +78,7 @@ const POSLoginPage = ({ onLogin }) => {
     setLoading(true);
     recordLogin(name.trim()).finally(() => {
       setTimeout(() => {
-        onLogin({ name: name.trim(), role });
+        onLogin({ name: name.trim(), role: 'order' });
         setLoading(false);
       }, 600);
     });
@@ -108,12 +87,12 @@ const POSLoginPage = ({ onLogin }) => {
   const labelStyle = {
     display: 'block',
     fontSize: 11,
-    fontWeight: 700,
+    fontWeight: 800,
     color: '#6B7280',
     marginBottom: 6,
     letterSpacing: '0.05em',
     textTransform: 'uppercase',
-    fontFamily: "'DM Sans', 'Inter', sans-serif"
+    fontFamily: "'Inter', sans-serif"
   };
 
   const handleBackToModules = () => {
@@ -136,10 +115,10 @@ const POSLoginPage = ({ onLogin }) => {
           fontSize: 11,
           letterSpacing: '0.15em',
           color: '#9CA3AF',
-          fontWeight: 600,
+          fontWeight: 700,
           textTransform: 'uppercase',
           marginBottom: 16,
-          fontFamily: "'DM Sans', 'Inter', sans-serif"
+          fontFamily: "'Inter', sans-serif"
         }}>
           POCS ORDER — LOGIN
         </div>
@@ -170,13 +149,13 @@ const POSLoginPage = ({ onLogin }) => {
           {/* Module badge */}
           <div style={{ marginBottom: 20 }}>
             <span style={{
-              fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
+              fontSize: 10.5, fontWeight: 700, letterSpacing: '0.04em',
               textTransform: 'uppercase', padding: '6px 14px', borderRadius: 20,
               background: '#ECFEFF',
               color: '#0E7490',
               border: '1px solid #A5F3FC',
               display: 'inline-block',
-              fontFamily: "'DM Sans', sans-serif"
+              fontFamily: "'Inter', sans-serif"
             }}>
               Pocs Order — Table Ordering
             </span>
@@ -230,87 +209,6 @@ const POSLoginPage = ({ onLogin }) => {
             </div>
           )}
 
-          {/* Vị trí trực - dropdown */}
-          <div ref={dropdownRef} style={{ position: 'relative', marginBottom: 18 }}>
-            <label style={labelStyle}>Vị trí trực POS</label>
-            <button 
-              type="button"
-              onClick={() => setIsOpen(!isOpen)}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                background: '#2D2D2D',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                outline: 'none',
-                color: '#FFFFFF',
-                fontSize: '13px'
-              }}
-            >
-              {selectedRoleObj ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    width: 24, height: 24, borderRadius: '4px',
-                    background: 'rgba(10,126,164,0.2)',
-                    color: '#0A7EA4',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 800, fontSize: 10,
-                    border: '1px solid rgba(10,126,164,0.3)'
-                  }}>
-                    {selectedRoleObj.icon}
-                  </div>
-                  <span style={{ fontWeight: 700 }}>{selectedRoleObj.label}</span>
-                </div>
-              ) : (
-                <span style={{ color: '#9CA3AF' }}>Chọn vị trí làm việc...</span>
-              )}
-              {isOpen ? <ChevronUp size={16} style={{ color: '#9CA3AF' }} /> : <ChevronDown size={16} style={{ color: '#9CA3AF' }} />}
-            </button>
-
-            {isOpen && (
-              <div style={{
-                position: 'absolute', top: '100%', left: 0, right: 0,
-                background: '#2D2D2D',
-                border: '1px solid #1A1A1A',
-                borderRadius: '6px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                zIndex: 50, marginTop: 6,
-                maxHeight: 180, overflowY: 'auto',
-                padding: '6px 0'
-              }}>
-                {roles.map(r => (
-                  <div 
-                    key={r.key} 
-                    onMouseDown={() => { setRole(r.key); setIsOpen(false); setError(''); }}
-                    style={{
-                      padding: '0 16px', height: 40, minHeight: 40,
-                      cursor: 'pointer',
-                      background: role === r.key ? 'rgba(255,255,255,0.06)' : 'transparent',
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      transition: 'background 0.1s'
-                    }}
-                  >
-                    <div style={{
-                      width: 24, height: 24, borderRadius: '4px',
-                      background: role === r.key ? 'rgba(10,126,164,0.35)' : 'rgba(255,255,255,0.1)',
-                      color: role === r.key ? '#0A7EA4' : '#9CA3AF',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 800, fontSize: 10,
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      flexShrink: 0
-                    }}>
-                      {r.icon}
-                    </div>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: role === r.key ? '#0A7EA4' : '#FFFFFF' }}>{r.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Name Input */}
           <div style={{ marginBottom: 18 }}>
