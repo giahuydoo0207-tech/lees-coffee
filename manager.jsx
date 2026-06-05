@@ -2249,8 +2249,14 @@ export const MgrStaffList = () => {
   const [error, setError] = useState('');
   const [onLeave, setOnLeave] = useState(() => LS.get('lc_staff_leave', {}));
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('list'); // 'list' | 'login_history'
+  const [activeTab, setActiveTab] = useState('create_account'); // 'create_account' | 'list' | 'login_history'
   const [loginHistory, setLoginHistory] = useState(() => LS.get('lc_login_history', []));
+
+  const [createName, setCreateName] = useState('');
+  const [createPassword, setCreatePassword] = useState('');
+  const [createRole, setCreateRole] = useState('cashier'); // 'cashier' | 'barista'
+  const [createError, setCreateError] = useState('');
+  const [createSuccess, setCreateSuccess] = useState('');
 
   const filteredStaff = useMemo(() => {
     return staff.filter(name => name.toLowerCase().includes(search.toLowerCase()));
@@ -2292,10 +2298,53 @@ export const MgrStaffList = () => {
     }
   };
 
+  const handleCreateAccount = (e) => {
+    e.preventDefault();
+    const name = createName.trim();
+    const password = createPassword.trim();
+    if (!name || !password) {
+      setCreateError('Vui lòng điền đầy đủ thông tin!');
+      setCreateSuccess('');
+      return;
+    }
+    if (staff.includes(name)) {
+      setCreateError('Nhân viên này đã tồn tại trong danh sách!');
+      setCreateSuccess('');
+      return;
+    }
+    
+    setStaff(prev => [...prev, name]);
+    
+    const accounts = LS.get('lc_staff_accounts', {});
+    accounts[name] = { password, role: createRole };
+    LS.set('lc_staff_accounts', accounts);
+    
+    setCreateName('');
+    setCreatePassword('');
+    setCreateError('');
+    setCreateSuccess(`Đã tạo thành công tài khoản cho nhân viên ${name} (${createRole === 'cashier' ? 'Thu ngân' : 'Pha chế'})!`);
+  };
+
   return (
     <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Tab Selector */}
       <div style={{ display: 'flex', gap: 8, borderBottom: '1.5px solid #cbd5e1', paddingBottom: 8 }}>
+        <button
+          onClick={() => setActiveTab('create_account')}
+          style={{
+            padding: '6px 14px',
+            borderRadius: '2px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            background: activeTab === 'create_account' ? '#1e40af' : '#fafafa',
+            color: activeTab === 'create_account' ? 'white' : '#4b5563',
+            border: activeTab === 'create_account' ? '1.5px solid #1e40af' : '1.5px solid #cbd5e1',
+            transition: 'all 0.1s'
+          }}
+        >
+          Tạo tài khoản nhân viên
+        </button>
         <button
           onClick={() => setActiveTab('list')}
           style={{
@@ -2310,7 +2359,7 @@ export const MgrStaffList = () => {
             transition: 'all 0.1s'
           }}
         >
-          👥 Danh Sách Nhân Viên
+          Danh Sách Nhân Viên
         </button>
         <button
           onClick={() => {
@@ -2329,11 +2378,105 @@ export const MgrStaffList = () => {
             transition: 'all 0.1s'
           }}
         >
-          🕒 Lịch Sử Đăng Nhập
+          Lịch Sử Đăng Nhập
         </button>
       </div>
 
-      {activeTab === 'list' ? (
+      {activeTab === 'create_account' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
+          {/* Form Create Account */}
+          <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', padding: 24 }}>
+            <h3 style={{ fontSize: 13.5, fontWeight: 900, color: '#0f172a', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Tạo tài khoản nhân viên mới
+            </h3>
+            
+            <form onSubmit={handleCreateAccount} style={{ maxWidth: 440 }}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Họ và tên nhân viên</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ví dụ: NGUYỄN VĂN AN..."
+                  value={createName}
+                  onChange={e => { setCreateName(e.target.value); setCreateError(''); setCreateSuccess(''); }}
+                  required
+                  style={{ borderRadius: '2px', padding: '10px 12px', fontSize: 13, width: '100%' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Mật khẩu mới</label>
+                <input
+                  type="password"
+                  className="input-field mono"
+                  placeholder="Nhập mật khẩu đăng nhập..."
+                  value={createPassword}
+                  onChange={e => { setCreatePassword(e.target.value); setCreateError(''); setCreateSuccess(''); }}
+                  required
+                  style={{ borderRadius: '2px', padding: '10px 12px', fontSize: 13, width: '100%' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Vị trí</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {[
+                    { key: 'cashier', label: 'Thu ngân' },
+                    { key: 'barista', label: 'Pha chế' }
+                  ].map(item => (
+                    <div
+                      key={item.key}
+                      onClick={() => { setCreateRole(item.key); setCreateError(''); setCreateSuccess(''); }}
+                      style={{
+                        padding: '10px',
+                        borderRadius: '2px',
+                        cursor: 'pointer',
+                        border: `1.5px solid ${createRole === item.key ? '#1e40af' : '#e5e7eb'}`,
+                        background: createRole === item.key ? '#eff6ff' : 'white',
+                        textAlign: 'center',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: createRole === item.key ? '#1e40af' : '#4b5563',
+                        transition: 'all 0.1s'
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {createError && (
+                <div style={{ fontSize: 12, color: '#be123c', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '2px', padding: '8px 12px', marginBottom: 16, fontWeight: 600 }}>
+                  Lỗi: {createError}
+                </div>
+              )}
+
+              {createSuccess && (
+                <div style={{ fontSize: 12, color: '#15803d', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '2px', padding: '8px 12px', marginBottom: 16, fontWeight: 600 }}>
+                  {createSuccess}
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-blue" style={{ borderRadius: '2px', fontSize: 13, fontWeight: 700, justifyContent: 'center', height: 38, width: '100%' }}>
+                Tạo tài khoản
+              </button>
+            </form>
+          </div>
+
+          {/* Sync Info Alert card */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: '2px', padding: 16 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
+                Thông tin tài khoản
+              </div>
+              <p style={{ fontSize: 11.5, color: '#1e40af', lineHeight: 1.5, margin: 0 }}>
+                Tài khoản sau khi tạo sẽ tự động được thêm vào danh sách nhân viên của hệ thống và đồng bộ trực tiếp với lịch xếp ca. Nhân viên có thể sử dụng họ tên và mật khẩu mới để đăng nhập.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : activeTab === 'list' ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
           {/* Left Column: Staff Table */}
           <div style={{ background: 'white', border: '1.5px solid #e5e7eb', borderRadius: '2px', overflow: 'hidden' }}>
@@ -2419,7 +2562,7 @@ export const MgrStaffList = () => {
                 </div>
                 {error && (
                   <div style={{ fontSize: 11, color: '#be123c', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '2px', padding: '6px 10px', marginBottom: 12, fontWeight: 600 }}>
-                    ⚠️ {error}
+                    Lỗi: {error}
                   </div>
                 )}
                 <button type="submit" className="btn btn-blue" style={{ width: '100%', borderRadius: '2px', fontSize: 12, fontWeight: 700, justifyContent: 'center', height: 36 }}>
