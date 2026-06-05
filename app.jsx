@@ -364,22 +364,6 @@ const ModuleSelector = ({ onSelect }) => {
           <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 900, color: '#1E3A8A', marginLeft: 8 }}>Platform</span>
         </div>
 
-        {/* Step Hint */}
-        <div className="pocs-fade-step" style={{
-          fontSize: 10.5,
-          letterSpacing: '0.14em',
-          fontWeight: 600,
-          color: '#9CA3AF',
-          textTransform: 'uppercase',
-          fontFamily: "'DM Sans', 'Inter', sans-serif",
-          border: '1px solid #E5E8EF',
-          padding: '6px 16px',
-          borderRadius: '20px',
-          background: '#FFFFFF',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-        }}>
-          BƯỚC 1 — CHỌN MODULE ĐĂNG NHẬP
-        </div>
       </div>
 
       {/* Module Cards Grid */}
@@ -479,31 +463,7 @@ const ModuleSelector = ({ onSelect }) => {
                 {m.subEn}
               </div>
 
-              {/* Divider line inside card */}
-              <div style={{
-                width: '100%',
-                height: 1,
-                background: '#F3F4F6',
-                margin: '20px 0 16px'
-              }} />
 
-              {/* CTA button text */}
-              <div style={{
-                fontFamily: "'DM Sans', 'Inter', sans-serif",
-                fontSize: 12,
-                fontWeight: 600,
-                color: showActive ? m.accent : '#9CA3AF',
-                transition: 'color 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
-                <span>Chọn module này</span>
-                <span style={{
-                  transform: showActive ? 'translateX(4px)' : 'none',
-                  transition: 'transform 0.2s'
-                }}>→</span>
-              </div>
             </div>
           );
         })}
