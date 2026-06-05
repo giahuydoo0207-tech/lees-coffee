@@ -221,8 +221,119 @@ const EmptyState = ({ text }) => (
   </div>
 );
 
+// ══════════════════════════════════════════════════════
+// ── MODULE SELECTOR (Pocs Biz vs Pocs Order) ──
+// ══════════════════════════════════════════════════════
+const ModuleSelector = ({ onSelect }) => {
+  const [hovered, setHovered] = useState(null);
+
+  const modules = [
+    {
+      id: 'biz',
+      name: 'Pocs Biz',
+      subVi: 'Quản lý doanh nghiệp',
+      subEn: 'Business Management',
+      accent: '#C8963E',
+      accentBg: 'rgba(200,150,62,0.14)',
+      border: 'rgba(200,150,62,0.55)',
+      shadow: 'rgba(200,150,62,0.25)',
+      icon: (
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="9" fill="rgba(200,150,62,0.15)"/>
+          <rect x="2" y="2" width="32" height="32" rx="7" fill="#111827"/>
+          <text x="6" y="27" fontFamily="Georgia,serif" fontSize="22" fontWeight="700" fill="#C8963E">B</text>
+          <circle cx="26" cy="9" r="3.5" fill="#C8963E"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'order',
+      name: 'Pocs Order',
+      subVi: 'Gọi món tại bàn',
+      subEn: 'Table Ordering',
+      accent: '#0A7EA4',
+      accentBg: 'rgba(10,126,164,0.14)',
+      border: 'rgba(10,126,164,0.55)',
+      shadow: 'rgba(10,126,164,0.25)',
+      icon: (
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="9" fill="rgba(10,126,164,0.15)"/>
+          <rect x="2" y="2" width="32" height="32" rx="7" fill="#0D1B2A"/>
+          <rect x="10" y="8" width="16" height="20" rx="2.5" fill="white" opacity="0.9"/>
+          <rect x="12" y="11" width="12" height="12" rx="1" fill="#0A7EA4"/>
+          <line x1="13.5" y1="14" x2="22.5" y2="14" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+          <line x1="13.5" y1="17" x2="22.5" y2="17" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+          <line x1="13.5" y1="20" x2="19" y2="20" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+          <circle cx="18" cy="26" r="1.5" fill="#10B981"/>
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'radial-gradient(circle at 10% 20%, #0f172a 0%, #1e293b 90%)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: 24, position: 'relative', overflow: 'hidden'
+    }}>
+      {/* Blur spheres */}
+      <div style={{ position: 'absolute', top: '10%', left: '10%', width: 400, height: 400, background: 'rgba(200,150,62,0.07)', borderRadius: '50%', filter: 'blur(100px)', pointerEvents: 'none' }}/>
+      <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: 350, height: 350, background: 'rgba(10,126,164,0.08)', borderRadius: '50%', filter: 'blur(100px)', pointerEvents: 'none' }}/>
+
+      {/* Pocs Master Brand */}
+      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.28em', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 10 }}>Nền tảng quản lý toàn diện</div>
+        <div style={{ fontSize: 46, fontWeight: 900, color: 'white', letterSpacing: '0.08em', lineHeight: 1 }}>POCS</div>
+        <div style={{ width: 40, height: 2, background: 'linear-gradient(90deg,#C8963E,#0A7EA4)', margin: '12px auto 0', borderRadius: 2 }}/>
+      </div>
+
+      {/* Step label */}
+      <div style={{ fontSize: 10.5, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: 20 }}>
+        Bước 1 — Chọn module
+      </div>
+
+      {/* Module cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, maxWidth: 540, width: '100%' }}>
+        {modules.map(m => (
+          <div
+            key={m.id}
+            onClick={() => onSelect(m.id)}
+            onMouseEnter={() => setHovered(m.id)}
+            onMouseLeave={() => setHovered(null)}
+            style={{
+              background: hovered === m.id ? m.accentBg : 'rgba(13,22,45,0.72)',
+              border: `2px solid ${hovered === m.id ? m.border : 'rgba(255,255,255,0.09)'}`,
+              borderRadius: 14, padding: '32px 22px 28px',
+              cursor: 'pointer', textAlign: 'center',
+              backdropFilter: 'blur(20px)',
+              transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
+              transform: hovered === m.id ? 'translateY(-5px) scale(1.02)' : 'none',
+              boxShadow: hovered === m.id ? `0 16px 40px ${m.shadow}` : '0 4px 20px rgba(0,0,0,0.35)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>{m.icon}</div>
+            <div style={{ color: 'white', fontSize: 20, fontWeight: 900, letterSpacing: '-0.01em', marginBottom: 6 }}>{m.name}</div>
+            <div style={{ color: m.accent, fontSize: 11.5, fontWeight: 700, marginBottom: 5 }}>{m.subVi}</div>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, fontStyle: 'italic' }}>{m.subEn}</div>
+            {hovered === m.id && (
+              <div style={{ marginTop: 16, fontSize: 10.5, color: m.accent, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                Chọn <span style={{ fontSize: 14 }}>→</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 36, fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
+        © 2026 POCS PLATFORM — ALL RIGHTS RESERVED
+      </div>
+    </div>
+  );
+};
+
 // ── LOGIN PAGE (Sleek Glassmorphic with Sharp Borders 2px) ──
-const LoginPage = ({ onLogin }) => {
+const LoginPage = ({ onLogin, module, onBack }) => {
   const [role, setRole] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -275,12 +386,8 @@ const LoginPage = ({ onLogin }) => {
     <div style={{
       minHeight: '100vh',
       background: 'radial-gradient(circle at 10% 20%, #0f172a 0%, #1e293b 90%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 24,
-      position: 'relative',
-      overflowY: 'auto'
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24, position: 'relative', overflowY: 'auto'
     }}>
       {/* Background Decorative Blur Spheres */}
       <div style={{
@@ -310,14 +417,39 @@ const LoginPage = ({ onLogin }) => {
         background: 'rgba(13, 22, 45, 0.75)',
         borderRadius: '12px',
         padding: '28px 32px 32px',
-        width: '100%',
-        maxWidth: 450,
+        width: '100%', maxWidth: 450,
         boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.07)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
         backdropFilter: 'blur(20px)',
-        position: 'relative',
-        zIndex: 1
+        position: 'relative', zIndex: 1
       }}>
+        {/* Back to module selector */}
+        <button onClick={onBack} style={{
+          position: 'absolute', top: 14, left: 16,
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: 4, letterSpacing: '0.04em',
+          padding: 4, transition: 'color 0.15s'
+        }}
+          onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+        >
+          ← Đổi module
+        </button>
+
+        {/* Module badge */}
+        <div style={{ textAlign: 'center', marginBottom: 4 }}>
+          <span style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.18em',
+            textTransform: 'uppercase', padding: '3px 10px', borderRadius: 20,
+            background: module === 'biz' ? 'rgba(200,150,62,0.18)' : 'rgba(10,126,164,0.18)',
+            color: module === 'biz' ? '#C8963E' : '#0A7EA4',
+            border: `1px solid ${module === 'biz' ? 'rgba(200,150,62,0.35)' : 'rgba(10,126,164,0.35)'}`,
+            display: 'inline-block'
+          }}>
+            {module === 'biz' ? 'Pocs Biz — Business Management' : 'Pocs Order — Table Ordering'}
+          </span>
+        </div>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           {/* BizCafe Brand Logo – Dark Version */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 12 }}>
@@ -2396,13 +2528,35 @@ const DetailedReport = ({ reports }) => {
   );
 };
 
-// ── MAIN CORE APP ──
+
 const App = () => {
+  const [module, setModule] = useState(null); // null = chọn module, 'biz' | 'order'
   const [user, setUser] = useState(() => LS.get('lc_user', null));
   const [reports, setReports] = useState(() => LS.get('lc_reports', []));
   const [comments, setComments] = useState(() => LS.get('lc_comments', []));
   const [page, setPage] = useState('dashboard');
   const [editReport, setEditReport] = useState(null);
+
+  const handleModuleSelect = (mod) => {
+    if (mod === 'order') {
+      window.location.href = 'https://pocs-lee.vercel.app';
+      return;
+    }
+    setModule(mod);
+  };
+
+  const handleBackToModules = () => {
+    setModule(null);
+    setUser(null);
+    LS.set('lc_user', null);
+  };
+
+  const login = (u) => { 
+    LS.set('lc_user', u); 
+    setUser(u); 
+    const defPage = { director: 'dashboard', accountant: 'dashboard', manager: 'report', staff: 'shift_cashier', cashier: 'shift_cashier', barista: 'shift_barista' };
+    setPage(defPage[u.role] || 'dashboard');
+  };
 
   const resetDemoData = () => {
     localStorage.removeItem('lc_seeded_v4');
@@ -2411,8 +2565,6 @@ const App = () => {
     const rejected = reps.find(r => r.status === 'rejected');
     const newComments = rejected ? [{ id: genId(), reportId: rejected.id, content: 'Chi phí điện nước cao hơn bình thường. Vui lòng kiểm tra lại hoá đơn và cập nhật số liệu chính xác.', createdBy: 'Trần Thị Bình', createdAt: '2026-05-11T09:30:00' }] : [];
     LS.set('lc_comments', newComments);
-    
-    // Seed Accountant Portal tables
     LS.set('lc_inventory', makeInventorySeed());
     LS.set('lc_inventory_logs', makeInventoryLogsSeed());
     LS.set('lc_invoices', makeInvoiceSeed());
@@ -2494,7 +2646,11 @@ const App = () => {
   const pendingCount = useMemo(() => reports.filter(r => r.status === 'pending').length, [reports]);
   const rejectCount = useMemo(() => reports.filter(r => r.createdBy === user?.name && r.status === 'rejected').length, [reports, user?.name]);
 
-  if (!user) return <LoginPage onLogin={login} />;
+  // Nếu user đã login từ session cũ → tự vào biz (không cần chọn module lại)
+  useEffect(() => { if (user && !module) setModule('biz'); }, [user]);
+
+  if (!module && !user) return <ModuleSelector onSelect={handleModuleSelect} />;
+  if (!user) return <LoginPage onLogin={login} module={module} onBack={handleBackToModules} />;
 
   const content = () => {
     if (page === 'dashboard') return <Dashboard reports={reports} onResetData={resetDemoData} />;
