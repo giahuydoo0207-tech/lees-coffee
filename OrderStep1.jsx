@@ -4,7 +4,7 @@ import {
   CreditCard, Wallet, Smartphone, Banknote, HelpCircle, 
   Sparkles, Check, ArrowRight, RefreshCw, ShoppingCart,
   Tag, UserCheck, LogOut, ArrowLeft, Printer,
-  Maximize2, Minimize2
+  Maximize2, Minimize2, History, CalendarDays, AlertOctagon, Users, Clock
 } from 'lucide-react';
 
 // ── LOCAL STORAGE HELPER ──
@@ -176,6 +176,11 @@ const CAT_LABELS = {
 };
 
 const fmt = n => new Intl.NumberFormat('vi-VN').format(n || 0) + ' ₫';
+const fmtDate = d => {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
 
 export const OrderStep1 = ({ user, setPage }) => {
   const [search, setSearch] = useState('');
@@ -288,6 +293,148 @@ export const OrderStep1 = ({ user, setPage }) => {
   };
 
   const handleRemovePromo = () => { setActivePromo(null); setPromoError(''); };
+
+  const [showLoginHistoryModal, setShowLoginHistoryModal] = useState(false);
+  const [showHandoverModal, setShowHandoverModal] = useState(false);
+  const [actualCash, setActualCash] = useState('');
+  const [handoverNote, setHandoverNote] = useState('');
+  const [handoverTab, setHandoverTab] = useState('cashier'); // 'cashier' | 'barista'
+  const [baristaSubTab, setBaristaSubTab] = useState('form'); // 'form' | 'history'
+  const [baristaDate, setBaristaDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [baristaShift, setBaristaShift] = useState('morning');
+  const [baristaNote, setBaristaNote] = useState('');
+  const [baristaStaffCount, setBaristaStaffCount] = useState('');
+  const [baristaIngredients, setBaristaIngredients] = useState(() => LS.get('lc_pos_ingredients', [
+    { id: 'i1', name: 'Sữa đặc', unit: 'hộp', start: 5, in: 4, out: 3 },
+    { id: 'i2', name: 'Sữa tươi', unit: 'g', start: 0, in: 0, out: 0 },
+    { id: 'i3', name: 'Đường nước', unit: 'ml', start: 250, in: 0, out: 159 },
+    { id: 'i4', name: 'Trân châu đen', unit: 'g', start: 0, in: 0, out: 0 },
+    { id: 'i5', name: 'Ly nhựa M', unit: 'cái', start: 50, in: 0, out: 40 },
+    { id: 'i6', name: 'Ly nhựa L', unit: 'cái', start: 50, in: 0, out: 30 },
+    { id: 'i7', name: 'Ori', unit: 'ml', start: 15000, in: 0, out: 2345 },
+  ]));
+
+  const baristaHistory = useMemo(() => {
+    const all = LS.get('lc_shifts', []);
+    const safeAll = Array.isArray(all) ? all.filter(Boolean) : [];
+    return safeAll.filter(s => s && s.roleType === 'barista').sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  }, [showHandoverModal]);
+
+  const updBaristaIng = (id, field, val) => {
+    setBaristaIngredients(prev => prev.map(i => i.id === id ? { ...i, [field]: val } : i));
+  };
+  const addBaristaIng = () => {
+    setBaristaIngredients(prev => [...prev, { id: 'pos-i-' + Math.random().toString(36).slice(2, 9), name: '', unit: 'g', start: '', in: '', out: '' }]);
+  };
+  const delBaristaIng = (id) => {
+    setBaristaIngredients(prev => prev.filter(i => i.id !== id));
+  };
+
+  const handleConfirmBaristaHandover = () => {
+    const today = baristaDate;
+    let s = {
+      id: 'S-' + Math.random().toString(36).slice(2, 9),
+      date: today,
+      shift: baristaShift,
+      shiftLabel: baristaShift === 'morning' ? 'Ca Sáng (06:00 - 14:00)' : 'Ca Chiều (14:00 - 22:00)',
+      staffName: user.name,
+      roleType: 'barista',
+      note: baristaNote.trim(),
+      staffCount: Number(baristaStaffCount) || 0,
+      submittedAt: new Date().toISOString(),
+      ingredients: baristaIngredients.filter(i => i.name.trim() !== '')
+    };
+
+    let rawInventory = LS.get('lc_inventory', []);
+    let inventory = Array.isArray(rawInventory) ? rawInventory.filter(Boolean) : [];
+    s.ingredients.forEach(ing => {
+      const ending = (Number(ing.start) || 0) + (Number(ing.in) || 0) - (Number(ing.out) || 0);
+      const matched = inventory.find(i => i && typeof i.name === 'string' && i.name.toLowerCase().includes(ing.name.toLowerCase()));
+      if (matched) {
+        matched.quantity = ending;
+      }
+    });
+    LS.set('lc_inventory', inventory);
+
+    let rawShifts = LS.get('lc_shifts', []);
+    let shifts = Array.isArray(rawShifts) ? rawShifts.filter(Boolean) : [];
+    shifts.unshift(s);
+    LS.set('lc_shifts', shifts);
+    LS.set('lc_pos_ingredients', baristaIngredients);
+
+    LS.set('lc_user', null);
+    window.location.reload();
+  };
+
+  const loginHistory = useMemo(() => {
+    return LS.get('lc_login_history', []);
+  }, [showLoginHistoryModal]);
+
+  const activeShift = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const shifts = LS.get('lc_shifts', []);
+    const safeShifts = Array.isArray(shifts) ? shifts.filter(Boolean) : [];
+    return safeShifts.find(s => s && s.date === today && s.staffName === user.name) || {
+      cashRevenue: 0, transferRevenue: 0, cardRevenue: 0, grabRevenue: 0, shopeeRevenue: 0, totalRevenue: 0, orders: 0
+    };
+  }, [showHandoverModal, lastOrderDetails]);
+
+  const shiftOrders = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const orders = LS.get('lc_billing_orders', []);
+    const safeOrders = Array.isArray(orders) ? orders.filter(Boolean) : [];
+    return safeOrders.filter(o => o && o.date === today && o.cashierName === user.name);
+  }, [showHandoverModal, lastOrderDetails]);
+
+  const handleConfirmHandover = () => {
+    const today = new Date().toISOString().split('T')[0];
+    let rawShifts = LS.get('lc_shifts', []);
+    let shifts = Array.isArray(rawShifts) ? rawShifts.filter(Boolean) : [];
+    
+    let activeIndex = shifts.findIndex(s => s && s.date === today && s.staffName === user.name);
+    const counted = parseFloat(actualCash.replace(/\./g, '')) || 0;
+    const sysCash = activeShift.cashRevenue || 0;
+    const diff = counted - sysCash;
+
+    const updateData = {
+      actualCashCounted: counted,
+      actualCashRevenue: counted,
+      cashVariance: diff,
+      cashDiscrepancy: diff,
+      handoverTime: new Date().toLocaleString('vi-VN'),
+      status: 'closed',
+      note: (handoverNote.trim() ? handoverNote.trim() + ' | ' : '') + (diff === 0 ? 'Khớp két.' : diff > 0 ? `Thừa két: ${fmt(diff)}` : `Thiếu két: ${fmt(diff)}`)
+    };
+
+    if (activeIndex !== -1) {
+      shifts[activeIndex] = {
+        ...shifts[activeIndex],
+        ...updateData
+      };
+    } else {
+      shifts.unshift({
+        id: 'S-' + Math.random().toString(36).slice(2, 9),
+        date: today,
+        shift: new Date().getHours() < 14 ? 'morning' : 'afternoon',
+        staffName: user.name,
+        roleType: (user.role === 'order' || user.role === 'cashier') ? 'cashier' : user.role,
+        cashRevenue: 0,
+        transferRevenue: 0,
+        cardRevenue: 0,
+        grabRevenue: 0,
+        shopeeRevenue: 0,
+        totalRevenue: 0,
+        orders: 0,
+        staffCount: 1,
+        submittedAt: new Date().toISOString(),
+        ...updateData
+      });
+    }
+    
+    LS.set('lc_shifts', shifts);
+    LS.set('lc_user', null);
+    window.location.reload();
+  };
 
   const handleBackToAdmin = () => {
     const defPage = { director: 'dashboard', accountant: 'dashboard', manager: 'report', staff: 'shift_cashier', cashier: 'shift_cashier', barista: 'shift_barista' };
@@ -448,10 +595,15 @@ export const OrderStep1 = ({ user, setPage }) => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '8px', borderLeft: '1.5px solid #334155', paddingLeft: '16px' }}>
+            {user.role === 'manager' && (
+              <button onClick={() => setShowLoginHistoryModal(true)} style={{ background: '#1e3a8a', color: '#f8fafc', border: '1px solid #3b82f6', padding: '6px 14px', borderRadius: '2px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <History size={13} /> Lịch Sử Đăng Nhập
+              </button>
+            )}
             <button onClick={handleBackToAdmin} style={{ background: '#1e293b', color: '#f8fafc', border: '1px solid #475569', padding: '6px 14px', borderRadius: '2px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <ArrowLeft size={13} /> Quay Lại
             </button>
-            <button onClick={handleLogout} style={{ background: '#be123c', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '2px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button onClick={() => setShowHandoverModal(true)} style={{ background: '#be123c', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '2px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <LogOut size={13} /> Giao Ca
             </button>
           </div>
@@ -789,6 +941,591 @@ export const OrderStep1 = ({ user, setPage }) => {
                 <button onClick={() => setShowSuccessModal(false)} className="btn btn-blue" style={{ flex: 2, borderRadius: '2px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                   <Check size={13} /> Đóng thông báo
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── LOGIN HISTORY MODAL ── */}
+        {showLoginHistoryModal && (
+          <div className="custom-scrollbar" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(2px)', display: 'flex', justifyContent: 'center', padding: '24px 16px', zIndex: 1000, overflowY: 'auto', maxHeight: '100vh' }}>
+            <div className="fade" style={{ margin: 'auto', background: 'white', padding: '24px', borderRadius: '2px', width: '100%', maxWidth: '600px', border: '1.5px solid #0f0f0e', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#1e40af', margin: 0, textTransform: 'uppercase' }}>LỊCH SỬ ĐĂNG NHẬP NHÂN VIÊN</h3>
+                <button onClick={() => setShowLoginHistoryModal(false)} style={{ background: 'none', border: 'none', color: '#be123c', fontWeight: 800, fontSize: '20px', cursor: 'pointer', padding: '0 4px' }}>×</button>
+              </div>
+
+              <div className="custom-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '16px' }}>
+                {loginHistory.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '12px' }}>
+                    Chưa ghi nhận lịch sử đăng nhập nào.
+                  </div>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                        <th style={{ padding: '10px 8px', fontWeight: 800, color: '#475569' }}>Nhân viên</th>
+                        <th style={{ padding: '10px 8px', fontWeight: 800, color: '#475569' }}>Vị trí / Vai trò</th>
+                        <th style={{ padding: '10px 8px', fontWeight: 800, color: '#475569' }}>Thời gian máy chủ (Server Time)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loginHistory.map((item) => {
+                        const roleLabels = { manager: 'Quản Lý Quán', cashier: 'Thu Ngân', barista: 'Pha Chế', order: 'Order / Gọi món', accountant: 'Kế Toán' };
+                        return (
+                          <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '10px 8px', fontWeight: 700, color: '#1e293b' }}>{item.username}</td>
+                            <td style={{ padding: '10px 8px' }}>
+                              <span style={{
+                                background: item.role === 'manager' ? '#fef3c7' : '#eff6ff',
+                                color: item.role === 'manager' ? '#b45309' : '#1e40af',
+                                padding: '2px 6px',
+                                borderRadius: '2px',
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                textTransform: 'uppercase'
+                              }}>
+                                {roleLabels[item.role] || item.role}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 8px', fontWeight: 600, color: '#475569' }} className="mono">{item.loginTime}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={() => setShowLoginHistoryModal(false)} className="btn btn-blue" style={{ borderRadius: '2px', height: '36px', padding: '0 20px', fontSize: '12px', fontWeight: 700 }}>
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── HANDOVER MODAL ── */}
+        {showHandoverModal && (
+          <div className="custom-scrollbar" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(2px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px 16px', zIndex: 1000, overflow: 'hidden' }}>
+            <div className="fade" style={{ background: 'white', borderRadius: '4px', width: '95vw', maxWidth: '1200px', height: '90vh', display: 'flex', flexDirection: 'column', border: '1.5px solid #0f0f0e', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.45)', overflow: 'hidden' }}>
+              
+              {/* Modal Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e5e7eb', padding: '16px 24px', flexShrink: 0, background: '#f8fafc' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#be123c', margin: 0, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                    BÀN GIAO CA & KẾT CA TRỰC
+                  </h3>
+                  
+                  {/* Tab Selector Buttons */}
+                  <div style={{ display: 'flex', gap: '8px', marginLeft: '24px' }}>
+                    <button 
+                      onClick={() => setHandoverTab('cashier')}
+                      style={{
+                        padding: '6px 16px',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        borderRadius: '2px',
+                        background: handoverTab === 'cashier' ? '#be123c' : 'white',
+                        color: handoverTab === 'cashier' ? 'white' : '#475569',
+                        border: handoverTab === 'cashier' ? '1.5px solid #be123c' : '1.5px solid #cbd5e1',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      Kết ca Thu Ngân
+                    </button>
+                    <button 
+                      onClick={() => setHandoverTab('barista')}
+                      style={{
+                        padding: '6px 16px',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        borderRadius: '2px',
+                        background: handoverTab === 'barista' ? '#be123c' : 'white',
+                        color: handoverTab === 'barista' ? 'white' : '#475569',
+                        border: handoverTab === 'barista' ? '1.5px solid #be123c' : '1.5px solid #cbd5e1',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      Kết ca Pha Chế
+                    </button>
+                  </div>
+                </div>
+                
+                <button onClick={() => setShowHandoverModal(false)} style={{ background: 'none', border: 'none', color: '#be123c', fontWeight: 800, fontSize: '22px', cursor: 'pointer', padding: '0 6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+              </div>
+
+              {/* Modal Body */}
+              <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+                
+                {/* ── 1. CASHIER HANDOVER VIEW ── */}
+                {handoverTab === 'cashier' && (
+                  <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '32px', background: '#ffffff' }}>
+                    
+                    {/* Left Column: System revenues & Order list */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.04em' }}>
+                          DOANH THU HỆ THỐNG GHI NHẬN (CA HÔM NAY)
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: '#f8fafc', padding: '16px', border: '1.5px solid #e2e8f0', borderRadius: '4px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#475569', fontWeight: 600 }}>Tiền mặt:</span>
+                            <strong className="mono" style={{ fontSize: '14px', color: '#1e293b' }}>{fmt(activeShift.cashRevenue)}</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#475569', fontWeight: 600 }}>Chuyển khoản:</span>
+                            <strong className="mono" style={{ fontSize: '14px', color: '#1e293b' }}>{fmt(activeShift.transferRevenue)}</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#475569', fontWeight: 600 }}>Thẻ ATM:</span>
+                            <strong className="mono" style={{ fontSize: '14px', color: '#1e293b' }}>{fmt(activeShift.cardRevenue)}</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#475569', fontWeight: 600 }}>Grab Food:</span>
+                            <strong className="mono" style={{ fontSize: '14px', color: '#1e293b' }}>{fmt(activeShift.grabRevenue)}</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <span style={{ color: '#475569', fontWeight: 600 }}>Shopee Food:</span>
+                            <strong className="mono" style={{ fontSize: '14px', color: '#1e293b' }}>{fmt(activeShift.shopeeRevenue)}</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderTop: '2px dashed #cbd5e1', paddingTop: '10px', marginTop: '6px', fontWeight: 800 }}>
+                            <span style={{ color: '#0f0f0e' }}>TỔNG DOANH THU HỆ THỐNG:</span>
+                            <span className="mono" style={{ color: '#1e40af', fontSize: '16px' }}>{fmt(activeShift.totalRevenue)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '200px' }}>
+                        <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.04em' }}>
+                          DANH SÁCH ĐƠN HÀNG TRONG CA ({shiftOrders.length})
+                        </div>
+                        <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', border: '1.5px solid #e2e8f0', borderRadius: '4px' }}>
+                          {shiftOrders.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '12px' }}>
+                              Chưa có giao dịch phát sinh trong ca trực.
+                            </div>
+                          ) : (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                              <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1, boxShadow: '0 1px 0 #e2e8f0' }}>
+                                <tr style={{ background: '#f8fafc' }}>
+                                  <th style={{ padding: '8px 12px', fontWeight: 800, color: '#475569' }}>Mã đơn</th>
+                                  <th style={{ padding: '8px 12px', fontWeight: 800, color: '#475569' }}>PTTT</th>
+                                  <th style={{ padding: '8px 12px', fontWeight: 800, color: '#475569', textAlign: 'right' }}>Thành tiền</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {shiftOrders.map(o => (
+                                  <tr key={o.orderId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                    <td style={{ padding: '8px 12px', fontWeight: 600 }} className="mono">{o.orderId}</td>
+                                    <td style={{ padding: '8px 12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 700 }}>
+                                      {o.paymentMethod === 'cash' ? 'T.Mặt' : o.paymentMethod === 'transfer' ? 'C.Khoản' : o.paymentMethod === 'card' ? 'Thẻ' : o.paymentMethod}
+                                    </td>
+                                    <td style={{ padding: '8px 12px', fontWeight: 700, textAlign: 'right' }} className="mono">{fmt(o.total)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Counting & note */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', borderLeft: '1.5px solid #f1f5f9', paddingLeft: '32px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#374151', marginBottom: '8px' }}>
+                          TIỀN MẶT THỰC TẾ ĐẾM ĐƯỢC (KÉT TIỀN)
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="text"
+                            className="input-field mono"
+                            value={actualCash}
+                            onChange={e => {
+                              const raw = e.target.value.replace(/\D/g, '');
+                              const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                              setActualCash(formatted);
+                            }}
+                            placeholder="Nhập số tiền mặt đếm thực tế..."
+                            style={{ paddingRight: '30px', fontSize: '15px', fontWeight: 800, height: '44px', border: '1.5px solid #cbd5e1', borderRadius: '4px', width: '100%', textIndent: '10px' }}
+                          />
+                          <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#64748b', fontSize: '14px' }}>₫</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#374151', marginBottom: '8px' }}>
+                          GHI CHÚ BÀN GIAO CA TRỰC
+                        </label>
+                        <textarea
+                          className="input-field"
+                          value={handoverNote}
+                          onChange={e => setHandoverNote(e.target.value)}
+                          placeholder="Nhập lý do chênh lệch hoặc thông tin bàn giao két..."
+                          rows={4}
+                          style={{ fontSize: '12.5px', borderRadius: '4px', border: '1.5px solid #cbd5e1', width: '100%', resize: 'none', padding: '12px' }}
+                        />
+                      </div>
+
+                      {actualCash.trim() !== '' && (
+                        <div className="fade" style={{
+                          background: (() => {
+                            const diff = (parseFloat(actualCash.replace(/\./g, '')) || 0) - (activeShift.cashRevenue || 0);
+                            if (diff === 0) return '#f0fdf4';
+                            if (diff > 0) return '#fffbeb';
+                            return '#fff1f2';
+                          })(),
+                          border: (() => {
+                            const diff = (parseFloat(actualCash.replace(/\./g, '')) || 0) - (activeShift.cashRevenue || 0);
+                            if (diff === 0) return '1.5px solid #bbf7d0';
+                            if (diff > 0) return '1.5px solid #fde68a';
+                            return '1.5px solid #fca5a5';
+                          })(),
+                          padding: '16px',
+                          borderRadius: '4px',
+                          textAlign: 'center'
+                        }}>
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>KẾT QUẢ ĐỐI CHIẾU DÒNG TIỀN MẶT</span>
+                          
+                          {(() => {
+                            const diff = (parseFloat(actualCash.replace(/\./g, '')) || 0) - (activeShift.cashRevenue || 0);
+                            if (diff === 0) {
+                              return <div style={{ color: '#166534', fontWeight: 900, fontSize: '15px', marginTop: '6px' }}>Khớp két dòng tiền (0 ₫)</div>;
+                            }
+                            if (diff > 0) {
+                              return <div style={{ color: '#b45309', fontWeight: 900, fontSize: '15px', marginTop: '6px' }}>Thừa két: +{fmt(diff)}</div>;
+                            }
+                            return <div style={{ color: '#be123c', fontWeight: 900, fontSize: '15px', marginTop: '6px' }}>Thiếu hụt két: {fmt(diff)}</div>;
+                          })()}
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: 'auto', borderTop: '1.5px solid #f1f5f9', paddingTop: '16px' }}>
+                        <button onClick={() => setShowHandoverModal(false)} className="btn btn-gray" style={{ borderRadius: '2px', height: '40px', padding: '0 24px', fontSize: '13px', fontWeight: 700 }}>
+                          Huỷ bỏ
+                        </button>
+                        <button
+                          onClick={handleConfirmHandover}
+                          disabled={actualCash.trim() === ''}
+                          className="btn btn-red"
+                          style={{
+                            borderRadius: '2px',
+                            height: '40px',
+                            padding: '0 28px',
+                            fontSize: '13px',
+                            fontWeight: 800,
+                            background: actualCash.trim() === '' ? '#cbd5e1' : '#be123c',
+                            color: 'white',
+                            border: 'none',
+                            cursor: actualCash.trim() === '' ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          Xác nhận bàn giao & Giao ca
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 2. BARISTA HANDOVER VIEW (WITH SIDEBAR) ── */}
+                {handoverTab === 'barista' && (
+                  <div style={{ flex: 1, display: 'flex', width: '100%', background: '#f8fafc' }}>
+                    
+                    {/* Left Mini-Sidebar (like main portal sidebar but without My schedule) */}
+                    <div style={{ width: '220px', background: '#0f0f0e', borderRight: '1px solid #252523', display: 'flex', flexDirection: 'column', flexShrink: 0, padding: '16px 0' }}>
+                      <div 
+                        onClick={() => setBaristaSubTab('form')}
+                        style={{
+                          padding: '12px 20px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: baristaSubTab === 'form' ? 'white' : '#9ca3af',
+                          background: baristaSubTab === 'form' ? '#252523' : 'transparent',
+                          borderLeft: baristaSubTab === 'form' ? '4px solid #be123c' : '4px solid transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <Clock size={16} /> <span>Kết Ca Pha Chế</span>
+                      </div>
+                      <div 
+                        onClick={() => setBaristaSubTab('history')}
+                        style={{
+                          padding: '12px 20px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: baristaSubTab === 'history' ? 'white' : '#9ca3af',
+                          background: baristaSubTab === 'history' ? '#252523' : 'transparent',
+                          borderLeft: baristaSubTab === 'history' ? '4px solid #be123c' : '4px solid transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <History size={16} /> <span>Lịch Sử Kết Ca</span>
+                      </div>
+                    </div>
+
+                    {/* Right Main Content Area */}
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+                      
+                      {/* Sub-Tab 1: Form */}
+                      {baristaSubTab === 'form' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
+                          
+                          {/* Form fields */}
+                          <div style={{ background: 'white', border: '1.5px solid #cbd5e1', borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>
+                              THÔNG TIN CA BÀN GIAO (PHA CHẾ)
+                            </div>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'center' }}>
+                              <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563' }}>Ngày giao nhận ca</label>
+                              <input type="date" className="input-field" value={baristaDate} onChange={e => setBaristaDate(e.target.value)} style={{ borderRadius: '2px', border: '1px solid #cbd5e1', padding: '6px 10px' }} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'start' }}>
+                              <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563', paddingTop: '6px' }}>Phiên trực ca</label>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                {[
+                                  { key: 'morning', label: 'Ca Sáng (06:00 - 14:00)' },
+                                  { key: 'afternoon', label: 'Ca Chiều (14:00 - 22:00)' }
+                                ].map(opt => (
+                                  <div 
+                                    key={opt.key} 
+                                    onClick={() => setBaristaShift(opt.key)} 
+                                    style={{ 
+                                      border: `1.5px solid ${baristaShift === opt.key ? '#1e40af' : '#e5e7eb'}`, 
+                                      borderRadius: '2px', 
+                                      padding: '8px 12px', 
+                                      cursor: 'pointer', 
+                                      background: baristaShift === opt.key ? '#eff6ff' : '#ffffff', 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      transition: 'all 0.1s ease' 
+                                    }}
+                                  >
+                                    <span style={{ fontSize: '12.5px', fontWeight: 700, color: baristaShift === opt.key ? '#1e40af' : '#4b5563' }}>{opt.label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>BÁO CÁO TỒN KHO KIỂM KÊ CUỐI CA</span>
+                                <button 
+                                  className="btn btn-gray" 
+                                  style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '4px' }} 
+                                  onClick={addBaristaIng}
+                                >
+                                  + Thêm Nguyên Vật Liệu
+                                </button>
+                              </div>
+
+                              {/* Headers row */}
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 64px 60px 60px 60px 60px 24px', gap: '6px', padding: '8px', fontSize: '9px', fontWeight: 800, color: '#9ca3af', borderBottom: '2px solid #e5e7eb', marginBottom: '6px', textAlign: 'right', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                <span style={{ textAlign: 'left' }}>Tên Nguyên Liệu</span>
+                                <span>Đơn Vị</span>
+                                <span>Đầu Ca</span>
+                                <span>Nhập Ca</span>
+                                <span style={{ color: '#be123c' }}>Hao Phí</span>
+                                <span>Cuối Ca</span>
+                                <span/>
+                              </div>
+
+                              {/* Ingredients list */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                {baristaIngredients.map(ing => (
+                                  <div key={ing.id} style={{ display: 'grid', gridTemplateColumns: '1fr 64px 60px 60px 60px 60px 24px', gap: '6px', alignItems: 'center', padding: '4px 8px', borderBottom: '1px solid #f1f5f9', fontSize: '12px' }}>
+                                    <input 
+                                      value={ing.name} 
+                                      onChange={e => updBaristaIng(ing.id, 'name', e.target.value)} 
+                                      placeholder="Tên NVL..." 
+                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', padding: '4px 0', fontSize: '12px', background: 'transparent' }} 
+                                      onFocus={e => e.target.style.borderBottom = '1.5px solid #1e40af'} 
+                                      onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
+                                    />
+                                    
+                                    <select 
+                                      value={ing.unit} 
+                                      onChange={e => updBaristaIng(ing.id, 'unit', e.target.value)} 
+                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', fontSize: '11.5px', background: 'transparent', color: '#4b5563', cursor: 'pointer', fontWeight: 600 }}
+                                    >
+                                      {['g', 'kg', 'ml', 'l', 'cái', 'hộp', 'túi'].map(u => <option key={u} value={u}>{u}</option>)}
+                                    </select>
+
+                                    <input 
+                                      type="number" 
+                                      className="mono" 
+                                      value={ing.start} 
+                                      onChange={e => updBaristaIng(ing.id, 'start', e.target.value)} 
+                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', fontWeight: 500 }} 
+                                      placeholder="0" 
+                                      onFocus={e => e.target.style.borderBottom = '1.5px solid #1e40af'} 
+                                      onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
+                                    />
+                                    
+                                    <input 
+                                      type="number" 
+                                      className="mono" 
+                                      value={ing.in} 
+                                      onChange={e => updBaristaIng(ing.id, 'in', e.target.value)} 
+                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', color: '#15803d', fontWeight: 500 }} 
+                                      placeholder="0" 
+                                      onFocus={e => e.target.style.borderBottom = '1.5px solid #15803d'} 
+                                      onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
+                                    />
+                                    
+                                    <input 
+                                      type="number" 
+                                      className="mono" 
+                                      value={ing.out} 
+                                      onChange={e => updBaristaIng(ing.id, 'out', e.target.value)} 
+                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', color: '#be123c', fontWeight: 500 }} 
+                                      placeholder="0" 
+                                      onFocus={e => e.target.style.borderBottom = '1.5px solid #be123c'} 
+                                      onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
+                                    />
+                                    
+                                    <div className="mono" style={{ textAlign: 'right', fontWeight: 700, fontSize: '12px', color: '#0f0f0e', padding: '4px 0' }}>
+                                      {(Number(ing.start) || 0) + (Number(ing.in) || 0) - (Number(ing.out) || 0)}
+                                    </div>
+                                    
+                                    <button 
+                                      onClick={() => delBaristaIng(ing.id)} 
+                                      style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#cbd5e1', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                      onMouseOver={e => e.target.style.color = '#ef4444'}
+                                      onMouseOut={e => e.target.style.color = '#cbd5e1'}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic', marginTop: '10px' }}>
+                                * Số liệu tồn cuối ca tự động kết toán = Tồn đầu ca + Hàng nhập thêm - Khấu hao sử dụng thực tế.
+                              </div>
+                            </div>
+
+                            <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px', display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'center' }}>
+                              <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563' }}>Nhân sự hỗ trợ ca</label>
+                              <input 
+                                type="number" 
+                                className="input-field mono" 
+                                value={baristaStaffCount} 
+                                onChange={e => setBaristaStaffCount(e.target.value)} 
+                                placeholder="0" 
+                                style={{ textAlign: 'right', fontWeight: 500, borderRadius: '2px', border: '1px solid #cbd5e1', padding: '6px 10px', width: '100%' }} 
+                              />
+                            </div>
+
+                            <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px' }}>
+                              <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+                                NHẬT KÝ VẬN HÀNH CA LÀM VIỆC
+                              </div>
+                              <textarea 
+                                className="input-field" 
+                                value={baristaNote} 
+                                onChange={e => setBaristaNote(e.target.value)} 
+                                rows={3} 
+                                placeholder="Mô tả các sự cố thiết bị máy pha cà phê, phản hồi khách hàng hoặc chênh lệch nguyên liệu..." 
+                                style={{ resize: 'none', borderRadius: '4px', border: '1px solid #cbd5e1', padding: '10px', width: '100%' }} 
+                              />
+                            </div>
+                          </div>
+
+                          {/* Right summary column */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div className="card" style={{ borderRadius: '4px', border: '1px solid #e5e7eb', background: 'white', padding: '16px' }}>
+                              <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+                                HỒ SƠ CA LÀM VIỆC
+                              </div>
+                              <div style={{ background: '#f8fafc', borderRadius: '4px', padding: '12px', border: '1.5px solid #e2e8f0', marginBottom: '14px' }}>
+                                <div style={{ fontSize: '9px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>PHIÊN TRỰC BÁO CÁO</div>
+                                <div style={{ fontWeight: 800, fontSize: '13px', color: '#0f0f0e' }}>
+                                  {baristaShift === 'morning' ? 'Ca Sáng (06:00 - 14:00)' : 'Ca Chiều (14:00 - 22:00)'}
+                                </div>
+                              </div>
+                              
+                              <div style={{ padding: '12px 14px', background: '#fffbeb', borderRadius: '4px', border: '1px dashed #f59e0b', color: '#b45309', fontSize: '11.5px', fontWeight: 600, lineHeight: 1.5, display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                                <AlertOctagon size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                                <span>Hệ thống tự động thiết lập kiểm kê nguyên vật liệu cho ca Pha Chế. Vui lòng cập nhật lượng hao hụt thực phẩm.</span>
+                              </div>
+                            </div>
+                            
+                            <button 
+                              className="btn btn-red" 
+                              style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '13px', borderRadius: '2px', fontWeight: 800, background: '#be123c', border: 'none', color: 'white', cursor: 'pointer', boxShadow: '0 4px 10px rgba(190,18,60,0.2)' }} 
+                              onClick={handleConfirmBaristaHandover}
+                            >
+                              GỬI BÁO CÁO CA TRỰC
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sub-Tab 2: History */}
+                      {baristaSubTab === 'history' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #cbd5e1', paddingBottom: '6px', marginBottom: '6px' }}>
+                            LỊCH SỬ KẾT CA PHA CHẾ ({baristaHistory.length})
+                          </div>
+                          
+                          {baristaHistory.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '12.5px', background: 'white', border: '1px dashed #cbd5e1', borderRadius: '4px' }}>
+                              Chưa ghi nhận ca pha chế nào được nộp trực tiếp trên thiết bị này.
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              {baristaHistory.map((s, sIdx) => (
+                                <div key={s.id || sIdx} style={{ background: 'white', padding: '16px 20px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                                    <span style={{ background: s.shift === 'morning' ? '#e0f2fe' : '#fef3c7', color: s.shift === 'morning' ? '#0284c7' : '#d97706', fontSize: '9px', fontWeight: 800, padding: '3px 8px', borderRadius: '2px', textTransform: 'uppercase' }}>
+                                      {s.shift === 'morning' ? 'Ca Sáng' : 'Ca Chiều'}
+                                    </span>
+                                    <span className="mono" style={{ fontWeight: 800, fontSize: '13px', color: '#0f0f0e' }}>Ngày: {fmtDate(s.date)}</span>
+                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#0f172a', background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: '2px' }}>{s.staffName || '—'}</span>
+                                    <span className="mono" style={{ fontSize: '11px', color: '#9ca3af', marginLeft: 'auto', fontWeight: 600 }}>Nộp lúc: {new Date(s.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                  </div>
+                                  
+                                  <div style={{ background: '#f8fafc', borderRadius: '4px', padding: '12px 16px', border: '1px solid #e5e7eb' }}>
+                                    <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 800, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.02em' }}>TỒN KHO BÀN GIAO CUỐI CA</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+                                      {(s.ingredients || []).map((ing, iIdx) => (
+                                        <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>
+                                          <span style={{ color: '#475569', fontWeight: 600 }}>{ing.name}</span>
+                                          <strong className="mono" style={{ color: '#0f0f0e', fontWeight: 700 }}>
+                                            {(Number(ing.start) || 0) + (Number(ing.in) || 0) - (Number(ing.out) || 0)} {ing.unit || 'g'}
+                                          </strong>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {s.note && (
+                                      <div style={{ marginTop: '12px', padding: '8px 12px', background: '#fff', borderRadius: '2px', fontSize: '11.5px', color: '#475569', borderLeft: '3px solid #cbd5e1', lineHeight: 1.5 }}>
+                                        <b>Nhật ký vận hành:</b> {s.note}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

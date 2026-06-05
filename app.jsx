@@ -499,8 +499,6 @@ const LoginPage = ({ onLogin, module, onBack }) => {
     { key: 'director', icon: 'GD', label: 'Giám Đốc', desc: 'Kiểm soát tài chính & xem báo cáo toàn hệ thống' },
     { key: 'accountant', icon: 'KT', label: 'Kế Toán', desc: 'Thẩm định, duyệt báo cáo & tổng hợp P&L' },
     { key: 'manager', icon: 'QL', label: 'Quản Lý Quán', desc: 'Khai báo doanh thu & chi phí hàng ngày' },
-    { key: 'cashier', icon: 'TN', label: 'Thu Ngân Ca', desc: 'Kết ca doanh thu & bàn giao tiền mặt cuối ca' },
-    { key: 'barista', icon: 'PC', label: 'Pha Chế Ca', desc: 'Kiểm kê nguyên vật liệu & bàn giao pha chế' },
   ];
 
   useEffect(() => {
@@ -555,6 +553,21 @@ const LoginPage = ({ onLogin, module, onBack }) => {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 24, position: 'relative', overflowY: 'auto'
     }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .eye-toggle-btn {
+          color: rgba(255, 255, 255, 0.7) !important;
+          transition: color 0.15s ease;
+        }
+        .eye-toggle-btn:hover {
+          color: #ffffff !important;
+        }
+        input:-webkit-autofill ~ .eye-toggle-btn {
+          color: #000000 !important;
+        }
+        input:autofill ~ .eye-toggle-btn {
+          color: #000000 !important;
+        }
+      ` }} />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: 440 }}>
         {/* Eyebrow above card */}
         <div style={{
@@ -780,15 +793,16 @@ const LoginPage = ({ onLogin, module, onBack }) => {
               />
               <button 
                 type="button"
+                className="eye-toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#000000',
                   padding: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  zIndex: 2
                 }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -854,21 +868,6 @@ const NAV = {
     { k: 'mgr_performance', i: BarChart2,        l: 'Phân Tích Hiệu Suất' },
     { k: 'mgr_inventory_alert', i: Package,      l: 'Cảnh Báo Tồn Kho' },
     { k: 'mgr_menu',        i: UtensilsCrossed,  l: 'Quản Lý Thực Đơn' }
-  ],
-  staff: [
-    { k: 'shift', i: FilePlus, l: 'Lịch Sử Kết Ca' },
-    { k: 'shift_history', i: History, l: 'Lịch Sử Ca Trực' },
-    { k: 'staff_schedule', i: CalendarDays, l: 'Lịch Phân Ca Của Tôi' }
-  ],
-  cashier: [
-    { k: 'shift_cashier', i: FilePlus, l: 'Kết Ca Thu Ngân' },
-    { k: 'shift_history', i: History, l: 'Lịch Sử Kết Ca' },
-    { k: 'staff_schedule', i: CalendarDays, l: 'Lịch Phân Ca Của Tôi' }
-  ],
-  barista: [
-    { k: 'shift_barista', i: FilePlus, l: 'Kết Ca Pha Chế' },
-    { k: 'shift_history', i: History, l: 'Lịch Sử Kết Ca' },
-    { k: 'staff_schedule', i: CalendarDays, l: 'Lịch Phân Ca Của Tôi' }
   ]
 };
 const PAGE_TITLE = {
@@ -1449,7 +1448,7 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
 // ── REPORT HISTORY (Manager view submission list and feedback dialog) ──
 const ReportHistory = ({ user, reports, comments, onEdit }) => {
   const [sel, setSel] = useState(null);
-  const mine = useMemo(() => [...reports].filter(r => r.createdBy === user.name).sort((a, b) => b.date.localeCompare(a.date)), [reports, user.name]);
+  const mine = useMemo(() => [...reports].sort((a, b) => b.date.localeCompare(a.date)), [reports]);
   const selComments = sel ? comments.filter(c => c.reportId === sel.id) : [];
   return (
     <div className="fade">
@@ -1875,21 +1874,31 @@ const MonthlySummary = ({ reports }) => {
 };
 
 // ── NOTIFICATIONS (Show rejected alerts from Accountant) ──
-const Notifications = ({ user, reports, onEdit }) => {
-  const rejected = useMemo(() => reports.filter(r => r.createdBy === user.name && r.status === 'rejected'), [reports, user.name]);
+const Notifications = ({ user, reports, comments, onEdit }) => {
+  const rejected = useMemo(() => reports.filter(r => r.status === 'rejected'), [reports]);
   return (
     <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {rejected.length === 0 ? <EmptyState icon="🎉" text="Không ghi nhận thông báo mới nào" /> : rejected.map(r => (
-        <div key={r.id} className="card" style={{ borderLeft: '4px solid #be123c', borderRadius: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', background: 'white', borderRight: '1px solid #e5e7eb', borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: '#be123c' }}>🔔 Báo cáo tài chính ca trực bị yêu cầu sửa đổi số liệu</div>
-            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Ngày kê khai: <b>{fmtDate(r.date)}</b> · Doanh thu mặt/chuyển khoản: <span className="mono" style={{ fontWeight: 600 }}>{fmt(r.cashRevenue + r.transferRevenue)}</span></div>
+      {rejected.length === 0 ? <EmptyState icon="🎉" text="Không ghi nhận thông báo mới nào" /> : rejected.map(r => {
+        const rComments = (comments || []).filter(c => c.reportId === r.id);
+        const lastComment = rComments.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+        return (
+          <div key={r.id} className="card" style={{ borderLeft: '4px solid #be123c', borderRadius: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', background: 'white', borderRight: '1px solid #e5e7eb', borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+            <div style={{ flex: 1, marginRight: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#be123c' }}>Báo cáo tài chính ngày {fmtDate(r.date)} bị yêu cầu sửa đổi số liệu</div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Người kê khai: <b>{r.createdBy}</b> · Doanh thu mặt/chuyển khoản: <span className="mono" style={{ fontWeight: 600 }}>{fmt(r.cashRevenue + r.transferRevenue)}</span></div>
+              {lastComment && (
+                <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '4px', padding: '10px 12px', marginTop: 10, fontSize: 12, color: '#4b5563', lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 700, color: '#c2410c' }}>Nội dung phản hồi của Kế toán ({lastComment.createdBy}):</span>
+                  <div style={{ marginTop: 4, fontWeight: 600, color: '#1e293b' }}>{lastComment.content}</div>
+                </div>
+              )}
+            </div>
+            <button className="btn btn-orange" style={{ padding: '8px 16px', fontSize: 12, borderRadius: '2px', fontWeight: 600, flexShrink: 0 }} onClick={() => onEdit(r)}>
+              Nhập lại số liệu ngay
+            </button>
           </div>
-          <button className="btn btn-orange" style={{ padding: '8px 16px', fontSize: 12, borderRadius: '2px', fontWeight: 600 }} onClick={() => onEdit(r)}>
-            ✏️ Nhập lại số liệu ngay
-          </button>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -2733,7 +2742,7 @@ const App = () => {
   const login = (u) => { 
     LS.set('lc_user', u); 
     setUser(u); 
-    const defPage = { director: 'dashboard', accountant: 'dashboard', manager: 'report', staff: 'shift_cashier', cashier: 'shift_cashier', barista: 'shift_barista' };
+    const defPage = { director: 'dashboard', accountant: 'dashboard', manager: 'report' };
     setPage(defPage[u.role] || 'dashboard');
   };
 
@@ -2818,7 +2827,7 @@ const App = () => {
   const handleEdit = (rep) => { setEditReport(rep); setPage('report'); };
 
   const pendingCount = useMemo(() => reports.filter(r => r.status === 'pending').length, [reports]);
-  const rejectCount = useMemo(() => reports.filter(r => r.createdBy === user?.name && r.status === 'rejected').length, [reports, user?.name]);
+  const rejectCount = useMemo(() => reports.filter(r => r.status === 'rejected').length, [reports]);
 
   // Nếu user đã login từ session cũ → tự vào biz (không cần chọn module lại)
   useEffect(() => { if (user && !module) setModule('biz'); }, [user]);
@@ -2833,9 +2842,7 @@ const App = () => {
     if (page === 'history') return <ReportHistory user={user} reports={reports} comments={comments} onEdit={handleEdit} />;
     if (page === 'review') return <ReviewList reports={reports} comments={comments} onUpdate={updateReport} />;
     if (page === 'summary') return <MonthlySummary reports={reports} />;
-    if (page === 'notify') return <Notifications user={user} reports={reports} onEdit={handleEdit} />;
-    if (page === 'shift' || page === 'shift_cashier' || page === 'shift_barista') return <ShiftForm user={user} page={page} onSave={() => setPage('shift_history')} />;
-    if (page === 'shift_history') return <ShiftHistory user={user} />;
+    if (page === 'notify') return <Notifications user={user} reports={reports} comments={comments} onEdit={handleEdit} />;
     
     // Accountant Portal views
     if (page === 'acc_reconcile') return <AccReconcile />;

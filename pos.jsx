@@ -112,6 +112,21 @@ const POSLoginPage = ({ onLogin }) => {
       padding: 24,
       position: 'relative'
     }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .eye-toggle-btn {
+          color: rgba(255, 255, 255, 0.7) !important;
+          transition: color 0.15s ease;
+        }
+        .eye-toggle-btn:hover {
+          color: #ffffff !important;
+        }
+        input:-webkit-autofill ~ .eye-toggle-btn {
+          color: #000000 !important;
+        }
+        input:autofill ~ .eye-toggle-btn {
+          color: #000000 !important;
+        }
+      ` }} />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: 440 }}>
         {/* Eyebrow above card */}
         <div style={{
@@ -257,15 +272,16 @@ const POSLoginPage = ({ onLogin }) => {
               />
               <button 
                 type="button"
+                className="eye-toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#000000',
                   padding: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  zIndex: 2
                 }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
