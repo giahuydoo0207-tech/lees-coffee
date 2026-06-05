@@ -9,7 +9,7 @@
   <meta name="description" content="Hệ thống quản lý tài chính nội bộ Bizcafe">
   <title>Pocs Platform – Nền Tảng Quản Lý Toàn Diện</title>
   <link rel="manifest" href="manifest.json">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
@@ -293,13 +293,33 @@ input:focus, textarea:focus, select:focus {
   background: white;
 }
 
-/* Fade In Animation */
 .fade { 
   animation: fadeIn 0.12s ease; 
 }
 @keyframes fadeIn { 
   from { opacity:0; transform: translateY(2px); } 
   to { opacity:1; transform: translateY(0); } 
+}
+
+/* POCS Module Selector Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pocs-header {
+  animation: fadeUp 0.45s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+.pocs-step {
+  animation: fadeUp 0.45s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+}
+.pocs-cards {
+  animation: fadeUp 0.45s 0.18s cubic-bezier(0.22,1,0.36,1) both;
+}
+.pocs-footer {
+  animation: fadeUp 0.45s 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+@media (max-width: 640px) {
+  .pocs-card-row { flex-direction: column !important; align-items: center !important; }
 }
 
 /* Modal */

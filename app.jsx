@@ -226,6 +226,56 @@ const EmptyState = ({ text }) => (
 // ══════════════════════════════════════════════════════
 const ModuleSelector = ({ onSelect }) => {
   const [hovered, setHovered] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+
+  const styles = `
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .pocs-fade-eyebrow {
+      animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 0ms;
+    }
+    .pocs-fade-logo {
+      animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 50ms;
+    }
+    .pocs-fade-step {
+      animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 100ms;
+    }
+    .pocs-fade-cards {
+      animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 180ms;
+    }
+    .pocs-fade-footer {
+      animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 300ms;
+    }
+    .pocs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 580px;
+      width: 100%;
+    }
+    @media (max-width: 640px) {
+      .pocs-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 0 16px;
+      }
+    }
+  `;
+
+  const handleCardClick = (id) => {
+    if (selectedId) return;
+    setSelectedId(id);
+    setTimeout(() => {
+      onSelect(id);
+    }, 220);
+  };
 
   const modules = [
     {
@@ -233,17 +283,14 @@ const ModuleSelector = ({ onSelect }) => {
       name: 'Pocs Biz',
       subVi: 'Quản lý doanh nghiệp',
       subEn: 'Business Management',
-      accent: '#C8963E',
-      accentBg: 'rgba(200,150,62,0.14)',
-      border: 'rgba(200,150,62,0.55)',
-      shadow: 'rgba(200,150,62,0.25)',
+      accent: '#1E3A8A',
+      bg: '#EEF2FF',
+      border: '#C7D2FE',
+      hoverBorder: '#1E3A8A',
+      shadow: 'rgba(30, 58, 138, 0.08)',
+      selectedShadow: 'rgba(30, 58, 138, 0.15)',
       icon: (
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <rect width="36" height="36" rx="9" fill="rgba(200,150,62,0.15)"/>
-          <rect x="2" y="2" width="32" height="32" rx="7" fill="#111827"/>
-          <text x="6" y="27" fontFamily="Georgia,serif" fontSize="22" fontWeight="700" fill="#C8963E">B</text>
-          <circle cx="26" cy="9" r="3.5" fill="#C8963E"/>
-        </svg>
+        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 24, color: '#1E3A8A' }}>B</span>
       ),
     },
     {
@@ -251,21 +298,14 @@ const ModuleSelector = ({ onSelect }) => {
       name: 'Pocs Order',
       subVi: 'Gọi món tại bàn',
       subEn: 'Table Ordering',
-      accent: '#0A7EA4',
-      accentBg: 'rgba(10,126,164,0.14)',
-      border: 'rgba(10,126,164,0.55)',
-      shadow: 'rgba(10,126,164,0.25)',
+      accent: '#0E7490',
+      bg: '#ECFEFF',
+      border: '#A5F3FC',
+      hoverBorder: '#0E7490',
+      shadow: 'rgba(14, 116, 144, 0.08)',
+      selectedShadow: 'rgba(14, 116, 144, 0.15)',
       icon: (
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <rect width="36" height="36" rx="9" fill="rgba(10,126,164,0.15)"/>
-          <rect x="2" y="2" width="32" height="32" rx="7" fill="#0D1B2A"/>
-          <rect x="10" y="8" width="16" height="20" rx="2.5" fill="white" opacity="0.9"/>
-          <rect x="12" y="11" width="12" height="12" rx="1" fill="#0A7EA4"/>
-          <line x1="13.5" y1="14" x2="22.5" y2="14" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
-          <line x1="13.5" y1="17" x2="22.5" y2="17" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
-          <line x1="13.5" y1="20" x2="19" y2="20" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
-          <circle cx="18" cy="26" r="1.5" fill="#10B981"/>
-        </svg>
+        <span style={{ fontFamily: 'sans-serif', fontWeight: 800, fontSize: 28, color: '#0E7490', lineHeight: 1 }}>≡</span>
       ),
     },
   ];
@@ -273,59 +313,195 @@ const ModuleSelector = ({ onSelect }) => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'radial-gradient(circle at 10% 20%, #0f172a 0%, #1e293b 90%)',
+      background: '#F0F2F5',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: 24, position: 'relative', overflow: 'hidden'
     }}>
-      {/* Blur spheres */}
-      <div style={{ position: 'absolute', top: '10%', left: '10%', width: 400, height: 400, background: 'rgba(200,150,62,0.07)', borderRadius: '50%', filter: 'blur(100px)', pointerEvents: 'none' }}/>
-      <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: 350, height: 350, background: 'rgba(10,126,164,0.08)', borderRadius: '50%', filter: 'blur(100px)', pointerEvents: 'none' }}/>
+      <style dangerouslySetInnerHTML={{ __html: styles }} />
 
-      {/* Pocs Master Brand */}
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
-        <div style={{ fontSize: 11, letterSpacing: '0.28em', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 10 }}>Nền tảng quản lý toàn diện</div>
-        <div style={{ fontSize: 46, fontWeight: 900, color: 'white', letterSpacing: '0.08em', lineHeight: 1 }}>POCS</div>
-        <div style={{ width: 40, height: 2, background: 'linear-gradient(90deg,#C8963E,#0A7EA4)', margin: '12px auto 0', borderRadius: 2 }}/>
+      {/* Header Container */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 32 }}>
+        {/* Eyebrow */}
+        <div className="pocs-fade-eyebrow" style={{
+          fontSize: 11,
+          letterSpacing: '0.22em',
+          color: '#9CA3AF',
+          fontWeight: 500,
+          textTransform: 'uppercase',
+          marginBottom: 8,
+          fontFamily: "'DM Sans', 'Inter', sans-serif"
+        }}>
+          Nền tảng quản lý toàn diện
+        </div>
+
+        {/* Logo "POCS Platform" in Inter & bold */}
+        <div className="pocs-fade-logo" style={{
+          fontSize: 40,
+          letterSpacing: '-0.02em',
+          lineHeight: 1.1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 16
+        }}>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 900, color: '#111827' }}>POCS</span>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 900, color: '#1E3A8A', marginLeft: 8 }}>Platform</span>
+        </div>
+
+        {/* Step Hint */}
+        <div className="pocs-fade-step" style={{
+          fontSize: 10.5,
+          letterSpacing: '0.14em',
+          fontWeight: 600,
+          color: '#9CA3AF',
+          textTransform: 'uppercase',
+          fontFamily: "'DM Sans', 'Inter', sans-serif",
+          border: '1px solid #E5E8EF',
+          padding: '6px 16px',
+          borderRadius: '20px',
+          background: '#FFFFFF',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+        }}>
+          BƯỚC 1 — CHỌN MODULE ĐĂNG NHẬP
+        </div>
       </div>
 
-      {/* Step label */}
-      <div style={{ fontSize: 10.5, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: 20 }}>
-        Bước 1 — Chọn module
-      </div>
+      {/* Module Cards Grid */}
+      <div className="pocs-grid pocs-fade-cards">
+        {modules.map(m => {
+          const isSelected = selectedId === m.id;
+          const isAnySelected = selectedId !== null;
+          const isHovered = hovered === m.id;
 
-      {/* Module cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, maxWidth: 540, width: '100%' }}>
-        {modules.map(m => (
-          <div
-            key={m.id}
-            onClick={() => onSelect(m.id)}
-            onMouseEnter={() => setHovered(m.id)}
-            onMouseLeave={() => setHovered(null)}
-            style={{
-              background: hovered === m.id ? m.accentBg : 'rgba(13,22,45,0.72)',
-              border: `2px solid ${hovered === m.id ? m.border : 'rgba(255,255,255,0.09)'}`,
-              borderRadius: 14, padding: '32px 22px 28px',
-              cursor: 'pointer', textAlign: 'center',
-              backdropFilter: 'blur(20px)',
-              transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
-              transform: hovered === m.id ? 'translateY(-5px) scale(1.02)' : 'none',
-              boxShadow: hovered === m.id ? `0 16px 40px ${m.shadow}` : '0 4px 20px rgba(0,0,0,0.35)',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>{m.icon}</div>
-            <div style={{ color: 'white', fontSize: 20, fontWeight: 900, letterSpacing: '-0.01em', marginBottom: 6 }}>{m.name}</div>
-            <div style={{ color: m.accent, fontSize: 11.5, fontWeight: 700, marginBottom: 5 }}>{m.subVi}</div>
-            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, fontStyle: 'italic' }}>{m.subEn}</div>
-            {hovered === m.id && (
-              <div style={{ marginTop: 16, fontSize: 10.5, color: m.accent, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                Chọn <span style={{ fontSize: 14 }}>→</span>
+          let cardStyle = {
+            background: '#FFFFFF',
+            border: '1.5px solid #E5E8EF',
+            borderRadius: 16,
+            padding: '36px 28px 28px',
+            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)'
+          };
+
+          if (isAnySelected) {
+            if (isSelected) {
+              cardStyle.transform = 'scale(1.03) translateY(-8px)';
+              cardStyle.borderColor = m.accent;
+              cardStyle.boxShadow = `0 20px 25px -5px ${m.selectedShadow}, 0 10px 10px -5px rgba(0, 0, 0, 0.04)`;
+            } else {
+              cardStyle.opacity = 0.35;
+              cardStyle.transform = 'scale(0.97)';
+            }
+          } else if (isHovered) {
+            cardStyle.transform = 'translateY(-6px)';
+            cardStyle.borderColor = m.border;
+            cardStyle.boxShadow = `0 12px 20px -3px ${m.shadow}, 0 4px 6px -2px rgba(0, 0, 0, 0.02)`;
+          }
+
+          const showActive = isSelected || (isHovered && !isAnySelected);
+
+          return (
+            <div
+              key={m.id}
+              onClick={() => handleCardClick(m.id)}
+              onMouseEnter={() => setHovered(m.id)}
+              onMouseLeave={() => setHovered(null)}
+              style={cardStyle}
+            >
+              {/* Icon Container */}
+              <div style={{
+                width: 52,
+                height: 52,
+                borderRadius: 12,
+                background: m.bg,
+                border: `1.5px solid ${m.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 20,
+                transform: showActive ? 'scale(1.05)' : 'none',
+                transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}>
+                {m.icon}
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Card Title */}
+              <div style={{
+                fontFamily: 'Syne, sans-serif',
+                color: '#111827',
+                fontSize: 20,
+                fontWeight: 700,
+                letterSpacing: '-0.01em',
+                marginBottom: 10
+              }}>
+                {m.name}
+              </div>
+
+              {/* Subtitle (VI) */}
+              <div style={{
+                fontFamily: "'DM Sans', 'Inter', sans-serif",
+                color: '#111827',
+                fontSize: 13,
+                fontWeight: 500,
+                marginBottom: 4
+              }}>
+                {m.subVi}
+              </div>
+
+              {/* Subtitle (EN) */}
+              <div style={{
+                fontFamily: "'DM Sans', 'Inter', sans-serif",
+                color: '#9CA3AF',
+                fontSize: 11.5,
+                fontWeight: 400,
+                fontStyle: 'italic'
+              }}>
+                {m.subEn}
+              </div>
+
+              {/* Divider line inside card */}
+              <div style={{
+                width: '100%',
+                height: 1,
+                background: '#F3F4F6',
+                margin: '20px 0 16px'
+              }} />
+
+              {/* CTA button text */}
+              <div style={{
+                fontFamily: "'DM Sans', 'Inter', sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                color: showActive ? m.accent : '#9CA3AF',
+                transition: 'color 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                <span>Chọn module này</span>
+                <span style={{
+                  transform: showActive ? 'translateX(4px)' : 'none',
+                  transition: 'transform 0.2s'
+                }}>→</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div style={{ marginTop: 36, fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
+      {/* Footer */}
+      <div className="pocs-fade-footer" style={{
+        marginTop: 48,
+        fontSize: 11,
+        color: '#9CA3AF',
+        letterSpacing: '0.08em',
+        fontFamily: "'DM Sans', 'Inter', sans-serif",
+        textAlign: 'center'
+      }}>
         © 2026 POCS PLATFORM — ALL RIGHTS RESERVED
       </div>
     </div>
