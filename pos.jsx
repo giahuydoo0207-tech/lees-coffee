@@ -160,7 +160,7 @@ const POSLoginPage = ({ onLogin }) => {
               display: 'inline-block',
               fontFamily: "'Inter', sans-serif"
             }}>
-              Pocs Order — Table Ordering
+              Pocs Order — Counter Ordering
             </span>
           </div>
 
@@ -187,7 +187,7 @@ const POSLoginPage = ({ onLogin }) => {
                   <span style={{ color: '#22D3EE', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>P</span>
                   <span style={{ color: '#0E7490', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>order</span>
                 </div>
-                <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#0E7490', textTransform: 'uppercase', opacity: 0.7 }}>TABLE ORDERING DEVICE</div>
+                <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#0E7490', textTransform: 'uppercase', opacity: 0.7 }}>COUNTER ORDERING DEVICE</div>
               </div>
             </div>
             <p style={{ color: '#9CA3AF', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Hệ Thống Gọi Món &amp; Bán Hàng Tại Quầy</p>

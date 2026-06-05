@@ -312,8 +312,8 @@ const ModuleSelector = ({ onSelect }) => {
     {
       id: 'order',
       name: 'Pocs Order',
-      subVi: 'Gọi món tại bàn',
-      subEn: 'Table Ordering',
+      subVi: 'Gọi món tại quầy',
+      subEn: 'Counter Ordering',
       accent: '#0E7490',
       bg: '#ECFEFF',
       border: '#A5F3FC',
