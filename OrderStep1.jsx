@@ -298,8 +298,8 @@ export const OrderStep1 = ({ user, setPage }) => {
   const [showHandoverModal, setShowHandoverModal] = useState(false);
   const [actualCash, setActualCash] = useState('');
   const [handoverNote, setHandoverNote] = useState('');
-  const [handoverTab, setHandoverTab] = useState('cashier'); // 'cashier' | 'barista'
-  const [baristaSubTab, setBaristaSubTab] = useState('form'); // 'form' | 'history'
+  const [handoverTab, setHandoverTab] = useState('cashier'); // 'cashier' | 'barista' | 'history'
+  const [historyType, setHistoryType] = useState('cashier'); // 'cashier' | 'barista'
   const [baristaDate, setBaristaDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [baristaShift, setBaristaShift] = useState('morning');
   const [baristaNote, setBaristaNote] = useState('');
@@ -318,6 +318,12 @@ export const OrderStep1 = ({ user, setPage }) => {
     const all = LS.get('lc_shifts', []);
     const safeAll = Array.isArray(all) ? all.filter(Boolean) : [];
     return safeAll.filter(s => s && s.roleType === 'barista').sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  }, [showHandoverModal]);
+
+  const cashierHistory = useMemo(() => {
+    const all = LS.get('lc_shifts', []);
+    const safeAll = Array.isArray(all) ? all.filter(Boolean) : [];
+    return safeAll.filter(s => s && (s.roleType === 'cashier' || s.roleType === 'order')).sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
   }, [showHandoverModal]);
 
   const updBaristaIng = (id, field, val) => {
@@ -361,6 +367,51 @@ export const OrderStep1 = ({ user, setPage }) => {
     shifts.unshift(s);
     LS.set('lc_shifts', shifts);
     LS.set('lc_pos_ingredients', baristaIngredients);
+
+    // ── AUTOMATICALLY AGGREGATE INTO MANAGER'S REPORT ──
+    try {
+      let rawReports = LS.get('lc_reports', []);
+      let reports = Array.isArray(rawReports) ? rawReports.filter(Boolean) : [];
+      let todayReportIndex = reports.findIndex(r => r && r.date === today);
+
+      const noteMsg = `[Giao ca Pha Chế ${user.name}: ${baristaNote.trim() || 'Không có sự cố'}]`;
+
+      if (todayReportIndex !== -1) {
+        let existingNote = reports[todayReportIndex].note || '';
+        if (!existingNote.includes(noteMsg)) {
+          existingNote = existingNote.trim() ? existingNote + ' | ' + noteMsg : noteMsg;
+        }
+        reports[todayReportIndex] = {
+          ...reports[todayReportIndex],
+          note: existingNote
+        };
+      } else {
+        reports.unshift({
+          id: 'R-' + Math.random().toString(36).slice(2, 9),
+          date: today,
+          createdBy: 'Hệ thống POS',
+          createdByRole: 'system',
+          cashRevenue: 0,
+          transferRevenue: 0,
+          cardRevenue: 0,
+          grabRevenue: 0,
+          shopeeRevenue: 0,
+          goodsCost: 0,
+          fixedExpenses: [
+            { id: 'f1', category: 'Lương nhân viên', amount: 450000 },
+            { id: 'f2', category: 'Điện nước', amount: 180000 },
+            { id: 'f3', category: 'Thuê mặt bằng', amount: 500000 },
+          ],
+          otherExpenses: [],
+          note: `Báo cáo tự động từ POS: ${noteMsg}`,
+          status: 'pending',
+          submittedAt: new Date().toISOString()
+        });
+      }
+      LS.set('lc_reports', reports);
+    } catch (e) {
+      console.warn("Failed to auto-update manager reports for barista", e);
+    }
 
     LS.set('lc_user', null);
     window.location.reload();
@@ -432,6 +483,58 @@ export const OrderStep1 = ({ user, setPage }) => {
     }
     
     LS.set('lc_shifts', shifts);
+
+    // ── AUTOMATICALLY AGGREGATE INTO MANAGER'S REPORT ──
+    try {
+      const allCashierShifts = shifts.filter(s => s && s.date === today && (s.roleType === 'cashier' || s.roleType === 'order'));
+      let rawReports = LS.get('lc_reports', []);
+      let reports = Array.isArray(rawReports) ? rawReports.filter(Boolean) : [];
+      let todayReportIndex = reports.findIndex(r => r && r.date === today);
+
+      const aggregatedRevenues = {
+        cashRevenue: allCashierShifts.reduce((sum, s) => sum + (s.cashRevenue || 0), 0),
+        transferRevenue: allCashierShifts.reduce((sum, s) => sum + (s.transferRevenue || 0), 0),
+        cardRevenue: allCashierShifts.reduce((sum, s) => sum + (s.cardRevenue || 0), 0),
+        grabRevenue: allCashierShifts.reduce((sum, s) => sum + (s.grabRevenue || 0), 0),
+        shopeeRevenue: allCashierShifts.reduce((sum, s) => sum + (s.shopeeRevenue || 0), 0),
+      };
+
+      const noteMsg = `[Giao ca Thu Ngân ${user.name}: đếm thực tế ${fmt(counted)}, chênh lệch ${fmt(diff)}]`;
+
+      if (todayReportIndex !== -1) {
+        let existingNote = reports[todayReportIndex].note || '';
+        if (!existingNote.includes(noteMsg)) {
+          existingNote = existingNote.trim() ? existingNote + ' | ' + noteMsg : noteMsg;
+        }
+        reports[todayReportIndex] = {
+          ...reports[todayReportIndex],
+          ...aggregatedRevenues,
+          note: existingNote
+        };
+      } else {
+        reports.unshift({
+          id: 'R-' + Math.random().toString(36).slice(2, 9),
+          date: today,
+          createdBy: 'Hệ thống POS',
+          createdByRole: 'system',
+          ...aggregatedRevenues,
+          goodsCost: 0,
+          fixedExpenses: [
+            { id: 'f1', category: 'Lương nhân viên', amount: 450000 },
+            { id: 'f2', category: 'Điện nước', amount: 180000 },
+            { id: 'f3', category: 'Thuê mặt bằng', amount: 500000 },
+          ],
+          otherExpenses: [],
+          note: `Báo cáo tự động từ POS: ${noteMsg}`,
+          status: 'pending',
+          submittedAt: new Date().toISOString()
+        });
+      }
+      LS.set('lc_reports', reports);
+    } catch (e) {
+      console.warn("Failed to auto-update manager reports", e);
+    }
+
     LS.set('lc_user', null);
     window.location.reload();
   };
@@ -1052,6 +1155,22 @@ export const OrderStep1 = ({ user, setPage }) => {
                     >
                       Kết ca Pha Chế
                     </button>
+                    <button 
+                      onClick={() => setHandoverTab('history')}
+                      style={{
+                        padding: '6px 16px',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        borderRadius: '2px',
+                        background: handoverTab === 'history' ? '#be123c' : 'white',
+                        color: handoverTab === 'history' ? 'white' : '#475569',
+                        border: handoverTab === 'history' ? '1.5px solid #be123c' : '1.5px solid #cbd5e1',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      Lịch Sử Kết Ca
+                    </button>
                   </div>
                 </div>
                 
@@ -1232,296 +1351,353 @@ export const OrderStep1 = ({ user, setPage }) => {
                   </div>
                 )}
 
-                {/* ── 2. BARISTA HANDOVER VIEW (WITH SIDEBAR) ── */}
+                {/* ── 2. BARISTA HANDOVER VIEW ── */}
                 {handoverTab === 'barista' && (
-                  <div style={{ flex: 1, display: 'flex', width: '100%', background: '#f8fafc' }}>
-                    
-                    {/* Left Mini-Sidebar (like main portal sidebar but without My schedule) */}
-                    <div style={{ width: '220px', background: '#0f0f0e', borderRight: '1px solid #252523', display: 'flex', flexDirection: 'column', flexShrink: 0, padding: '16px 0' }}>
-                      <div 
-                        onClick={() => setBaristaSubTab('form')}
-                        style={{
-                          padding: '12px 20px',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          fontWeight: 700,
-                          color: baristaSubTab === 'form' ? 'white' : '#9ca3af',
-                          background: baristaSubTab === 'form' ? '#252523' : 'transparent',
-                          borderLeft: baristaSubTab === 'form' ? '4px solid #be123c' : '4px solid transparent',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <Clock size={16} /> <span>Kết Ca Pha Chế</span>
-                      </div>
-                      <div 
-                        onClick={() => setBaristaSubTab('history')}
-                        style={{
-                          padding: '12px 20px',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          fontWeight: 700,
-                          color: baristaSubTab === 'history' ? 'white' : '#9ca3af',
-                          background: baristaSubTab === 'history' ? '#252523' : 'transparent',
-                          borderLeft: baristaSubTab === 'history' ? '4px solid #be123c' : '4px solid transparent',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <History size={16} /> <span>Lịch Sử Kết Ca</span>
-                      </div>
-                    </div>
-
-                    {/* Right Main Content Area */}
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+                  <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#f8fafc' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
                       
-                      {/* Sub-Tab 1: Form */}
-                      {baristaSubTab === 'form' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
-                          
-                          {/* Form fields */}
-                          <div style={{ background: 'white', border: '1.5px solid #cbd5e1', borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>
-                              THÔNG TIN CA BÀN GIAO (PHA CHẾ)
-                            </div>
-                            
-                            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'center' }}>
-                              <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563' }}>Ngày giao nhận ca</label>
-                              <input type="date" className="input-field" value={baristaDate} onChange={e => setBaristaDate(e.target.value)} style={{ borderRadius: '2px', border: '1px solid #cbd5e1', padding: '6px 10px' }} />
-                            </div>
+                      {/* Form fields */}
+                      <div style={{ background: 'white', border: '1.5px solid #cbd5e1', borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>
+                          THÔNG TIN CA BÀN GIAO (PHA CHẾ)
+                        </div>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'center' }}>
+                          <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563' }}>Ngày giao nhận ca</label>
+                          <input type="date" className="input-field" value={baristaDate} onChange={e => setBaristaDate(e.target.value)} style={{ borderRadius: '2px', border: '1px solid #cbd5e1', padding: '6px 10px' }} />
+                        </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'start' }}>
-                              <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563', paddingTop: '6px' }}>Phiên trực ca</label>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                {[
-                                  { key: 'morning', label: 'Ca Sáng (06:00 - 14:00)' },
-                                  { key: 'afternoon', label: 'Ca Chiều (14:00 - 22:00)' }
-                                ].map(opt => (
-                                  <div 
-                                    key={opt.key} 
-                                    onClick={() => setBaristaShift(opt.key)} 
-                                    style={{ 
-                                      border: `1.5px solid ${baristaShift === opt.key ? '#1e40af' : '#e5e7eb'}`, 
-                                      borderRadius: '2px', 
-                                      padding: '8px 12px', 
-                                      cursor: 'pointer', 
-                                      background: baristaShift === opt.key ? '#eff6ff' : '#ffffff', 
-                                      display: 'flex', 
-                                      alignItems: 'center', 
-                                      transition: 'all 0.1s ease' 
-                                    }}
-                                  >
-                                    <span style={{ fontSize: '12.5px', fontWeight: 700, color: baristaShift === opt.key ? '#1e40af' : '#4b5563' }}>{opt.label}</span>
-                                  </div>
-                                ))}
+                        <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'start' }}>
+                          <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563', paddingTop: '6px' }}>Phiên trực ca</label>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {[
+                              { key: 'morning', label: 'Ca Sáng (06:00 - 14:00)' },
+                              { key: 'afternoon', label: 'Ca Chiều (14:00 - 22:00)' }
+                            ].map(opt => (
+                              <div 
+                                key={opt.key} 
+                                onClick={() => setBaristaShift(opt.key)} 
+                                style={{ 
+                                  border: `1.5px solid ${baristaShift === opt.key ? '#1e40af' : '#e5e7eb'}`, 
+                                  borderRadius: '2px', 
+                                  padding: '8px 12px', 
+                                  cursor: 'pointer', 
+                                  background: baristaShift === opt.key ? '#eff6ff' : '#ffffff', 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  transition: 'all 0.1s ease' 
+                                }}
+                              >
+                                <span style={{ fontSize: '12.5px', fontWeight: 700, color: baristaShift === opt.key ? '#1e40af' : '#4b5563' }}>{opt.label}</span>
                               </div>
-                            </div>
-
-                            <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>BÁO CÁO TỒN KHO KIỂM KÊ CUỐI CA</span>
-                                <button 
-                                  className="btn btn-gray" 
-                                  style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '4px' }} 
-                                  onClick={addBaristaIng}
-                                >
-                                  + Thêm Nguyên Vật Liệu
-                                </button>
-                              </div>
-
-                              {/* Headers row */}
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 64px 60px 60px 60px 60px 24px', gap: '6px', padding: '8px', fontSize: '9px', fontWeight: 800, color: '#9ca3af', borderBottom: '2px solid #e5e7eb', marginBottom: '6px', textAlign: 'right', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                                <span style={{ textAlign: 'left' }}>Tên Nguyên Liệu</span>
-                                <span>Đơn Vị</span>
-                                <span>Đầu Ca</span>
-                                <span>Nhập Ca</span>
-                                <span style={{ color: '#be123c' }}>Hao Phí</span>
-                                <span>Cuối Ca</span>
-                                <span/>
-                              </div>
-
-                              {/* Ingredients list */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                {baristaIngredients.map(ing => (
-                                  <div key={ing.id} style={{ display: 'grid', gridTemplateColumns: '1fr 64px 60px 60px 60px 60px 24px', gap: '6px', alignItems: 'center', padding: '4px 8px', borderBottom: '1px solid #f1f5f9', fontSize: '12px' }}>
-                                    <input 
-                                      value={ing.name} 
-                                      onChange={e => updBaristaIng(ing.id, 'name', e.target.value)} 
-                                      placeholder="Tên NVL..." 
-                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', padding: '4px 0', fontSize: '12px', background: 'transparent' }} 
-                                      onFocus={e => e.target.style.borderBottom = '1.5px solid #1e40af'} 
-                                      onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
-                                    />
-                                    
-                                    <select 
-                                      value={ing.unit} 
-                                      onChange={e => updBaristaIng(ing.id, 'unit', e.target.value)} 
-                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', fontSize: '11.5px', background: 'transparent', color: '#4b5563', cursor: 'pointer', fontWeight: 600 }}
-                                    >
-                                      {['g', 'kg', 'ml', 'l', 'cái', 'hộp', 'túi'].map(u => <option key={u} value={u}>{u}</option>)}
-                                    </select>
-
-                                    <input 
-                                      type="number" 
-                                      className="mono" 
-                                      value={ing.start} 
-                                      onChange={e => updBaristaIng(ing.id, 'start', e.target.value)} 
-                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', fontWeight: 500 }} 
-                                      placeholder="0" 
-                                      onFocus={e => e.target.style.borderBottom = '1.5px solid #1e40af'} 
-                                      onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
-                                    />
-                                    
-                                    <input 
-                                      type="number" 
-                                      className="mono" 
-                                      value={ing.in} 
-                                      onChange={e => updBaristaIng(ing.id, 'in', e.target.value)} 
-                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', color: '#15803d', fontWeight: 500 }} 
-                                      placeholder="0" 
-                                      onFocus={e => e.target.style.borderBottom = '1.5px solid #15803d'} 
-                                      onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
-                                    />
-                                    
-                                    <input 
-                                      type="number" 
-                                      className="mono" 
-                                      value={ing.out} 
-                                      onChange={e => updBaristaIng(ing.id, 'out', e.target.value)} 
-                                      style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', color: '#be123c', fontWeight: 500 }} 
-                                      placeholder="0" 
-                                      onFocus={e => e.target.style.borderBottom = '1.5px solid #be123c'} 
-                                      onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
-                                    />
-                                    
-                                    <div className="mono" style={{ textAlign: 'right', fontWeight: 700, fontSize: '12px', color: '#0f0f0e', padding: '4px 0' }}>
-                                      {(Number(ing.start) || 0) + (Number(ing.in) || 0) - (Number(ing.out) || 0)}
-                                    </div>
-                                    
-                                    <button 
-                                      onClick={() => delBaristaIng(ing.id)} 
-                                      style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#cbd5e1', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
-                                      onMouseOver={e => e.target.style.color = '#ef4444'}
-                                      onMouseOut={e => e.target.style.color = '#cbd5e1'}
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                              <div style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic', marginTop: '10px' }}>
-                                * Số liệu tồn cuối ca tự động kết toán = Tồn đầu ca + Hàng nhập thêm - Khấu hao sử dụng thực tế.
-                              </div>
-                            </div>
-
-                            <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px', display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'center' }}>
-                              <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563' }}>Nhân sự hỗ trợ ca</label>
-                              <input 
-                                type="number" 
-                                className="input-field mono" 
-                                value={baristaStaffCount} 
-                                onChange={e => setBaristaStaffCount(e.target.value)} 
-                                placeholder="0" 
-                                style={{ textAlign: 'right', fontWeight: 500, borderRadius: '2px', border: '1px solid #cbd5e1', padding: '6px 10px', width: '100%' }} 
-                              />
-                            </div>
-
-                            <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px' }}>
-                              <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-                                NHẬT KÝ VẬN HÀNH CA LÀM VIỆC
-                              </div>
-                              <textarea 
-                                className="input-field" 
-                                value={baristaNote} 
-                                onChange={e => setBaristaNote(e.target.value)} 
-                                rows={3} 
-                                placeholder="Mô tả các sự cố thiết bị máy pha cà phê, phản hồi khách hàng hoặc chênh lệch nguyên liệu..." 
-                                style={{ resize: 'none', borderRadius: '4px', border: '1px solid #cbd5e1', padding: '10px', width: '100%' }} 
-                              />
-                            </div>
-                          </div>
-
-                          {/* Right summary column */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div className="card" style={{ borderRadius: '4px', border: '1px solid #e5e7eb', background: 'white', padding: '16px' }}>
-                              <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
-                                HỒ SƠ CA LÀM VIỆC
-                              </div>
-                              <div style={{ background: '#f8fafc', borderRadius: '4px', padding: '12px', border: '1.5px solid #e2e8f0', marginBottom: '14px' }}>
-                                <div style={{ fontSize: '9px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>PHIÊN TRỰC BÁO CÁO</div>
-                                <div style={{ fontWeight: 800, fontSize: '13px', color: '#0f0f0e' }}>
-                                  {baristaShift === 'morning' ? 'Ca Sáng (06:00 - 14:00)' : 'Ca Chiều (14:00 - 22:00)'}
-                                </div>
-                              </div>
-                              
-                              <div style={{ padding: '12px 14px', background: '#fffbeb', borderRadius: '4px', border: '1px dashed #f59e0b', color: '#b45309', fontSize: '11.5px', fontWeight: 600, lineHeight: 1.5, display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                                <AlertOctagon size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                                <span>Hệ thống tự động thiết lập kiểm kê nguyên vật liệu cho ca Pha Chế. Vui lòng cập nhật lượng hao hụt thực phẩm.</span>
-                              </div>
-                            </div>
-                            
-                            <button 
-                              className="btn btn-red" 
-                              style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '13px', borderRadius: '2px', fontWeight: 800, background: '#be123c', border: 'none', color: 'white', cursor: 'pointer', boxShadow: '0 4px 10px rgba(190,18,60,0.2)' }} 
-                              onClick={handleConfirmBaristaHandover}
-                            >
-                              GỬI BÁO CÁO CA TRỰC
-                            </button>
+                            ))}
                           </div>
                         </div>
-                      )}
 
-                      {/* Sub-Tab 2: History */}
-                      {baristaSubTab === 'history' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #cbd5e1', paddingBottom: '6px', marginBottom: '6px' }}>
-                            LỊCH SỬ KẾT CA PHA CHẾ ({baristaHistory.length})
+                        <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>BÁO CÁO TỒN KHO KIỂM KÊ CUỐI CA</span>
+                            <button 
+                              className="btn btn-gray" 
+                              style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '4px' }} 
+                              onClick={addBaristaIng}
+                            >
+                              + Thêm Nguyên Vật Liệu
+                            </button>
+                          </div>
+
+                          {/* Headers row */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 64px 60px 60px 60px 60px 24px', gap: '6px', padding: '8px', fontSize: '9px', fontWeight: 800, color: '#9ca3af', borderBottom: '2px solid #e5e7eb', marginBottom: '6px', textAlign: 'right', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                            <span style={{ textAlign: 'left' }}>Tên Nguyên Liệu</span>
+                            <span>Đơn Vị</span>
+                            <span>Đầu Ca</span>
+                            <span>Nhập Ca</span>
+                            <span style={{ color: '#be123c' }}>Hao Phí</span>
+                            <span>Cuối Ca</span>
+                            <span/>
+                          </div>
+
+                          {/* Ingredients list */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            {baristaIngredients.map(ing => (
+                              <div key={ing.id} style={{ display: 'grid', gridTemplateColumns: '1fr 64px 60px 60px 60px 60px 24px', gap: '6px', alignItems: 'center', padding: '4px 8px', borderBottom: '1px solid #f1f5f9', fontSize: '12px' }}>
+                                <input 
+                                  value={ing.name} 
+                                  onChange={e => updBaristaIng(ing.id, 'name', e.target.value)} 
+                                  placeholder="Tên NVL..." 
+                                  style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', padding: '4px 0', fontSize: '12px', background: 'transparent' }} 
+                                  onFocus={e => e.target.style.borderBottom = '1.5px solid #1e40af'} 
+                                  onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
+                                />
+                                
+                                <select 
+                                  value={ing.unit} 
+                                  onChange={e => updBaristaIng(ing.id, 'unit', e.target.value)} 
+                                  style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', fontSize: '11.5px', background: 'transparent', color: '#4b5563', cursor: 'pointer', fontWeight: 600 }}
+                                >
+                                  {['g', 'kg', 'ml', 'l', 'cái', 'hộp', 'túi'].map(u => <option key={u} value={u}>{u}</option>)}
+                                </select>
+
+                                <input 
+                                  type="number" 
+                                  className="mono" 
+                                  value={ing.start} 
+                                  onChange={e => updBaristaIng(ing.id, 'start', e.target.value)} 
+                                  style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', fontWeight: 500 }} 
+                                  placeholder="0" 
+                                  onFocus={e => e.target.style.borderBottom = '1.5px solid #1e40af'} 
+                                  onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
+                                />
+                                
+                                <input 
+                                  type="number" 
+                                  className="mono" 
+                                  value={ing.in} 
+                                  onChange={e => updBaristaIng(ing.id, 'in', e.target.value)} 
+                                  style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', color: '#15803d', fontWeight: 500 }} 
+                                  placeholder="0" 
+                                  onFocus={e => e.target.style.borderBottom = '1.5px solid #15803d'} 
+                                  onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
+                                />
+                                
+                                <input 
+                                  type="number" 
+                                  className="mono" 
+                                  value={ing.out} 
+                                  onChange={e => updBaristaIng(ing.id, 'out', e.target.value)} 
+                                  style={{ width: '100%', border: 'none', borderBottom: '1.5px solid transparent', textAlign: 'right', padding: '4px 0', fontSize: '11.5px', background: 'transparent', color: '#be123c', fontWeight: 500 }} 
+                                  placeholder="0" 
+                                  onFocus={e => e.target.style.borderBottom = '1.5px solid #be123c'} 
+                                  onBlur={e => e.target.style.borderBottom = '1.5px solid transparent'} 
+                                />
+                                
+                                <div className="mono" style={{ textAlign: 'right', fontWeight: 700, fontSize: '12px', color: '#0f0f0e', padding: '4px 0' }}>
+                                  {(Number(ing.start) || 0) + (Number(ing.in) || 0) - (Number(ing.out) || 0)}
+                                </div>
+                                
+                                <button 
+                                  onClick={() => delBaristaIng(ing.id)} 
+                                  style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#cbd5e1', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                  onMouseOver={e => e.target.style.color = '#ef4444'}
+                                  onMouseOut={e => e.target.style.color = '#cbd5e1'}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic', marginTop: '10px' }}>
+                            * Số liệu tồn cuối ca tự động kết toán = Tồn đầu ca + Hàng nhập thêm - Khấu hao sử dụng thực tế.
+                          </div>
+                        </div>
+
+                        <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px', display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'center' }}>
+                          <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#4b5563' }}>Nhân sự hỗ trợ ca</label>
+                          <input 
+                            type="number" 
+                            className="input-field mono" 
+                            value={baristaStaffCount} 
+                            onChange={e => setBaristaStaffCount(e.target.value)} 
+                            placeholder="0" 
+                            style={{ textAlign: 'right', fontWeight: 500, borderRadius: '2px', border: '1px solid #cbd5e1', padding: '6px 10px', width: '100%' }} 
+                          />
+                        </div>
+
+                        <div style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '16px' }}>
+                          <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+                            NHẬT KÝ VẬN HÀNH CA LÀM VIỆC
+                          </div>
+                          <textarea 
+                            className="input-field" 
+                            value={baristaNote} 
+                            onChange={e => setBaristaNote(e.target.value)} 
+                            rows={3} 
+                            placeholder="Mô tả các sự cố thiết bị máy pha cà phê, phản hồi khách hàng hoặc chênh lệch nguyên liệu..." 
+                            style={{ resize: 'none', borderRadius: '4px', border: '1px solid #cbd5e1', padding: '10px', width: '100%' }} 
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right summary column */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div className="card" style={{ borderRadius: '4px', border: '1px solid #e5e7eb', background: 'white', padding: '16px' }}>
+                          <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+                            HỒ SƠ CA LÀM VIỆC
+                          </div>
+                          <div style={{ background: '#f8fafc', borderRadius: '4px', padding: '12px 14px', border: '1.5px solid #e2e8f0', marginBottom: '14px' }}>
+                            <div style={{ fontSize: '9px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>PHIÊN TRỰC BÁO CÁO</div>
+                            <div style={{ fontWeight: 800, fontSize: '13px', color: '#0f0f0e' }}>
+                              {baristaShift === 'morning' ? 'Ca Sáng (06:00 - 14:00)' : 'Ca Chiều (14:00 - 22:00)'}
+                            </div>
                           </div>
                           
-                          {baristaHistory.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '12.5px', background: 'white', border: '1px dashed #cbd5e1', borderRadius: '4px' }}>
-                              Chưa ghi nhận ca pha chế nào được nộp trực tiếp trên thiết bị này.
-                            </div>
-                          ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                              {baristaHistory.map((s, sIdx) => (
-                                <div key={s.id || sIdx} style={{ background: 'white', padding: '16px 20px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                                    <span style={{ background: s.shift === 'morning' ? '#e0f2fe' : '#fef3c7', color: s.shift === 'morning' ? '#0284c7' : '#d97706', fontSize: '9px', fontWeight: 800, padding: '3px 8px', borderRadius: '2px', textTransform: 'uppercase' }}>
-                                      {s.shift === 'morning' ? 'Ca Sáng' : 'Ca Chiều'}
-                                    </span>
-                                    <span className="mono" style={{ fontWeight: 800, fontSize: '13px', color: '#0f0f0e' }}>Ngày: {fmtDate(s.date)}</span>
-                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#0f172a', background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: '2px' }}>{s.staffName || '—'}</span>
-                                    <span className="mono" style={{ fontSize: '11px', color: '#9ca3af', marginLeft: 'auto', fontWeight: 600 }}>Nộp lúc: {new Date(s.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <div style={{ padding: '12px 14px', background: '#fffbeb', borderRadius: '4px', border: '1px dashed #f59e0b', color: '#b45309', fontSize: '11.5px', fontWeight: 600, lineHeight: 1.5, display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                            <AlertOctagon size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                            <span>Hệ thống tự động thiết lập kiểm kê nguyên vật liệu cho ca Pha Chế. Vui lòng cập nhật lượng hao hụt thực phẩm.</span>
+                          </div>
+                        </div>
+                        
+                        <button 
+                          className="btn btn-red" 
+                          style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '13px', borderRadius: '2px', fontWeight: 800, background: '#be123c', border: 'none', color: 'white', cursor: 'pointer', boxShadow: '0 4px 10px rgba(190,18,60,0.2)' }} 
+                          onClick={handleConfirmBaristaHandover}
+                        >
+                          GỬI BÁO CÁO CA TRỰC
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 3. HISTORY VIEW ── */}
+                {handoverTab === 'history' && (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f8fafc', padding: '24px', width: '100%' }}>
+                    {/* History Type Selector Buttons */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexShrink: 0 }}>
+                      <button
+                        onClick={() => setHistoryType('cashier')}
+                        style={{
+                          padding: '6px 16px',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          borderRadius: '2px',
+                          background: historyType === 'cashier' ? '#be123c' : 'white',
+                          color: historyType === 'cashier' ? 'white' : '#475569',
+                          border: historyType === 'cashier' ? '1.5px solid #be123c' : '1.5px solid #cbd5e1',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        Lịch Sử Thu Ngân
+                      </button>
+                      <button
+                        onClick={() => setHistoryType('barista')}
+                        style={{
+                          padding: '6px 16px',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          borderRadius: '2px',
+                          background: historyType === 'barista' ? '#be123c' : 'white',
+                          color: historyType === 'barista' ? 'white' : '#475569',
+                          border: historyType === 'barista' ? '1.5px solid #be123c' : '1.5px solid #cbd5e1',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        Lịch Sử Pha Chế
+                      </button>
+                    </div>
+
+                    {/* History List Container */}
+                    <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
+                      {historyType === 'barista' ? (
+                        /* Barista History List */
+                        baristaHistory.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '40px 10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '12.5px', background: 'white', border: '1px dashed #cbd5e1', borderRadius: '4px' }}>
+                            Chưa ghi nhận ca pha chế nào được nộp trực tiếp trên thiết bị này.
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {baristaHistory.map((s, sIdx) => (
+                              <div key={s.id || sIdx} style={{ background: 'white', padding: '16px 20px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                                  <span style={{ background: s.shift === 'morning' ? '#e0f2fe' : '#fef3c7', color: s.shift === 'morning' ? '#0284c7' : '#d97706', fontSize: '9px', fontWeight: 800, padding: '3px 8px', borderRadius: '2px', textTransform: 'uppercase' }}>
+                                    {s.shift === 'morning' ? 'Ca Sáng' : 'Ca Chiều'}
+                                  </span>
+                                  <span className="mono" style={{ fontWeight: 800, fontSize: '13px', color: '#0f0f0e' }}>Ngày: {fmtDate(s.date)}</span>
+                                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#0f172a', background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: '2px' }}>{s.staffName || '—'}</span>
+                                  <span className="mono" style={{ fontSize: '11px', color: '#9ca3af', marginLeft: 'auto', fontWeight: 600 }}>Nộp lúc: {new Date(s.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                
+                                <div style={{ background: '#f8fafc', borderRadius: '4px', padding: '12px 16px', border: '1px solid #e5e7eb' }}>
+                                  <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 800, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.02em' }}>TỒN KHO BÀN GIAO CUỐI CA</div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+                                    {(s.ingredients || []).map((ing, iIdx) => (
+                                      <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>
+                                        <span style={{ color: '#475569', fontWeight: 600 }}>{ing.name}</span>
+                                        <strong className="mono" style={{ color: '#0f0f0e', fontWeight: 700 }}>
+                                          {(Number(ing.start) || 0) + (Number(ing.in) || 0) - (Number(ing.out) || 0)} {ing.unit || 'g'}
+                                        </strong>
+                                      </div>
+                                    ))}
                                   </div>
-                                  
-                                  <div style={{ background: '#f8fafc', borderRadius: '4px', padding: '12px 16px', border: '1px solid #e5e7eb' }}>
-                                    <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 800, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.02em' }}>TỒN KHO BÀN GIAO CUỐI CA</div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
-                                      {(s.ingredients || []).map((ing, iIdx) => (
-                                        <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>
-                                          <span style={{ color: '#475569', fontWeight: 600 }}>{ing.name}</span>
-                                          <strong className="mono" style={{ color: '#0f0f0e', fontWeight: 700 }}>
-                                            {(Number(ing.start) || 0) + (Number(ing.in) || 0) - (Number(ing.out) || 0)} {ing.unit || 'g'}
-                                          </strong>
-                                        </div>
-                                      ))}
+                                  {s.note && (
+                                    <div style={{ marginTop: '12px', padding: '8px 12px', background: '#fff', borderRadius: '2px', fontSize: '11.5px', color: '#475569', borderLeft: '3px solid #cbd5e1', lineHeight: 1.5 }}>
+                                      <b>Nhật ký vận hành:</b> {s.note}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      ) : (
+                        /* Cashier History List */
+                        cashierHistory.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '40px 10px', color: '#94a3b8', fontStyle: 'italic', fontSize: '12.5px', background: 'white', border: '1px dashed #cbd5e1', borderRadius: '4px' }}>
+                            Chưa ghi nhận ca thu ngân nào được nộp trực tiếp trên thiết bị này.
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {cashierHistory.map((s, sIdx) => (
+                              <div key={s.id || sIdx} style={{ background: 'white', padding: '16px 20px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                                  <span style={{ background: s.shift === 'morning' ? '#e0f2fe' : '#fef3c7', color: s.shift === 'morning' ? '#0284c7' : '#d97706', fontSize: '9px', fontWeight: 800, padding: '3px 8px', borderRadius: '2px', textTransform: 'uppercase' }}>
+                                    {s.shift === 'morning' ? 'Ca Sáng' : 'Ca Chiều'}
+                                  </span>
+                                  <span className="mono" style={{ fontWeight: 800, fontSize: '13px', color: '#0f0f0e' }}>Ngày: {fmtDate(s.date)}</span>
+                                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#0f172a', background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: '2px' }}>{s.staffName || '—'}</span>
+                                  <span className="mono" style={{ fontSize: '11px', color: '#9ca3af', marginLeft: 'auto', fontWeight: 600 }}>Nộp lúc: {new Date(s.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                
+                                <div style={{ background: '#f8fafc', borderRadius: '4px', padding: '12px 16px', border: '1px solid #e5e7eb', display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px' }}>
+                                  <div>
+                                    <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 800, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.02em' }}>DOANH THU HỆ THỐNG</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: '#475569' }}>Tiền mặt:</span><strong>{fmt(s.cashRevenue)}</strong>
+                                      </div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: '#475569' }}>Chuyển khoản:</span><strong>{fmt(s.transferRevenue)}</strong>
+                                      </div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: '#475569' }}>Thẻ ATM:</span><strong>{fmt(s.cardRevenue)}</strong>
+                                      </div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: '#475569' }}>Grab Food:</span><strong>{fmt(s.grabRevenue)}</strong>
+                                      </div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: '#475569' }}>Shopee Food:</span><strong>{fmt(s.shopeeRevenue)}</strong>
+                                      </div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #cbd5e1', paddingTop: '4px', fontWeight: 800 }}>
+                                        <span>Tổng doanh thu:</span><span style={{ color: '#1e40af' }}>{fmt(s.totalRevenue)}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 800, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.02em' }}>ĐỐI CHIẾU TIỀN MẶT</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: '#475569' }}>Tiền mặt đếm thực:</span><strong>{fmt(s.actualCashRevenue || s.actualCashCounted)}</strong>
+                                      </div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #cbd5e1', paddingTop: '4px', fontWeight: 800 }}>
+                                        <span>Chênh lệch:</span>
+                                        <span style={{ color: (s.cashDiscrepancy || 0) === 0 ? '#15803d' : (s.cashDiscrepancy || 0) > 0 ? '#b45309' : '#be123c' }}>
+                                          {(s.cashDiscrepancy || 0) > 0 ? `+${fmt(s.cashDiscrepancy)}` : fmt(s.cashDiscrepancy || 0)}
+                                        </span>
+                                      </div>
                                     </div>
                                     {s.note && (
-                                      <div style={{ marginTop: '12px', padding: '8px 12px', background: '#fff', borderRadius: '2px', fontSize: '11.5px', color: '#475569', borderLeft: '3px solid #cbd5e1', lineHeight: 1.5 }}>
-                                        <b>Nhật ký vận hành:</b> {s.note}
+                                      <div style={{ marginTop: '8px', padding: '6px 10px', background: '#fff', borderRadius: '2px', fontSize: '11.5px', color: '#475569', borderLeft: '3px solid #cbd5e1', lineHeight: 1.4 }}>
+                                        <b>Ghi chú:</b> {s.note}
                                       </div>
                                     )}
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                              </div>
+                            ))}
+                          </div>
+                        )
                       )}
                     </div>
                   </div>
