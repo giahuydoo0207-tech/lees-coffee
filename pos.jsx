@@ -86,7 +86,7 @@ const POSLoginPage = ({ onLogin }) => {
   }, []);
 
   const selectedRoleObj = roles.find(r => r.key === role);
-  const canLogin = role && name.trim() && password;
+  const canLogin = name.trim() && password;
 
   const handleLogin = () => {
     if (!canLogin) return;
@@ -105,212 +105,277 @@ const POSLoginPage = ({ onLogin }) => {
     });
   };
 
+  const labelStyle = {
+    display: 'block',
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#6B7280',
+    marginBottom: 6,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    fontFamily: "'DM Sans', 'Inter', sans-serif"
+  };
+
+  const handleBackToModules = () => {
+    window.location.href = 'index.html';
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'radial-gradient(circle at 10% 20%, #0f172a 0%, #1e293b 90%)',
+      background: '#F0F2F5',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 24,
       position: 'relative'
     }}>
-      {/* Visual background glowing orb */}
-      <div style={{
-        position: 'absolute',
-        top: '25%',
-        left: '25%',
-        width: '300px',
-        height: '300px',
-        background: 'rgba(30, 64, 175, 0.15)',
-        borderRadius: '50%',
-        filter: 'blur(80px)',
-        pointerEvents: 'none'
-      }}></div>
-
-      <div className="fade" style={{
-        background: 'rgba(255, 255, 255, 0.94)',
-        borderRadius: '2px',
-        padding: '24px 32px 32px',
-        width: '100%',
-        maxWidth: 440,
-        boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.3)',
-        border: '1px solid rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(10px)',
-        position: 'relative',
-        zIndex: 1
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <img 
-            src="https://theme.hstatic.net/200000885783/1001244158/14/logo.png?v=745"
-            alt="Lee's Coffee"
-            style={{ width: "80px", objectFit: "contain", margin: "0 auto 8px", display: "block", mixBlendMode: "multiply" }}
-          />
-          <h1 style={{ color: '#0f0f0e', fontSize: 20, fontWeight: 900, letterSpacing: '0.08em', marginBottom: 4 }}>LEE'S COFFEE POS</h1>
-          <p style={{ color: '#64748b', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Hệ Thống Gọi Món & Bán Hàng Tại Quầy</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: 440 }}>
+        {/* Eyebrow above card */}
+        <div style={{
+          fontSize: 11,
+          letterSpacing: '0.15em',
+          color: '#9CA3AF',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          marginBottom: 16,
+          fontFamily: "'DM Sans', 'Inter', sans-serif"
+        }}>
+          POCS ORDER — LOGIN
         </div>
 
-        {error && (
-          <div style={{
-            background: '#fff1f2',
-            border: '1.5px solid #fca5a5',
-            color: '#be123c',
-            padding: '8px 12px',
-            borderRadius: '2px',
-            fontSize: 11.5,
-            fontWeight: 700,
-            marginBottom: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6
-          }}>
-            <span>Lỗi:</span>
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Name Input */}
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Họ và tên nhân viên trực quầy</label>
-          <input 
-            className="input-field" 
-            value={name} 
-            onChange={e => { setName(e.target.value); setError(''); }} 
-            placeholder="Nhập tên thu ngân / người order..." 
-            style={{ borderRadius: '2px', padding: '10px 14px' }} 
-          />
-        </div>
-
-        {/* Password Input */}
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Mật khẩu đăng nhập</label>
-          <input 
-            type="password"
-            className="input-field mono" 
-            value={password} 
-            onChange={e => { setPassword(e.target.value); setError(''); }} 
-            placeholder="••••••••" 
-            style={{ borderRadius: '2px', padding: '10px 14px', background: '#fafafa' }} 
-          />
-        </div>
-
-        <div ref={dropdownRef} style={{ position: 'relative', marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Vị trí trực POS</label>
-          <button 
-            type="button"
-            onClick={() => setIsOpen(!isOpen)}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              background: '#ffffff',
-              border: '1.5px solid #cbd5e1',
-              borderRadius: '2px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              outline: 'none',
-            }}
+        <div className="fade" style={{
+          background: '#FFFFFF',
+          borderRadius: 24,
+          padding: '36px 32px 32px',
+          width: '100%',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.03)',
+          border: '1px solid #E5E8EF',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          {/* Back to module selector */}
+          <button onClick={handleBackToModules} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#9CA3AF', fontSize: 13, fontWeight: 500,
+            display: 'flex', alignItems: 'center', gap: 4,
+            marginBottom: 20, padding: 0, transition: 'color 0.15s'
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = '#4b5563'}
+            onMouseLeave={e => e.currentTarget.style.color = '#9CA3AF'}
           >
-            {selectedRoleObj ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '2px',
-                  background: '#eff6ff',
-                  color: '#1e40af',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 800,
-                  fontSize: 10,
-                  border: '1px solid #bfdbfe'
-                }}>
-                  {selectedRoleObj.icon}
-                </div>
-                <span style={{ fontWeight: 700, fontSize: 13, color: '#1f2937' }}>{selectedRoleObj.label}</span>
-              </div>
-            ) : (
-              <span style={{ color: '#9ca3af', fontSize: 12.5 }}>Chọn vị trí làm việc...</span>
-            )}
-            {isOpen ? <ChevronUp size={16} style={{ color: '#6b7280' }} /> : <ChevronDown size={16} style={{ color: '#6b7280' }} />}
+            ← Đổi module
           </button>
 
-          {isOpen && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              background: 'white',
-              border: '1.5px solid #0f0f0e',
-              borderRadius: '2px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-              zIndex: 50,
-              marginTop: 4,
-              maxHeight: 180,
-              overflowY: 'auto',
-              padding: '4px 0'
+          {/* Module badge */}
+          <div style={{ marginBottom: 20 }}>
+            <span style={{
+              fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
+              textTransform: 'uppercase', padding: '6px 14px', borderRadius: 20,
+              background: '#ECFEFF',
+              color: '#0E7490',
+              border: '1px solid #A5F3FC',
+              display: 'inline-block',
+              fontFamily: "'DM Sans', sans-serif"
             }}>
-              {roles.map(r => (
-                <div 
-                  key={r.key} 
-                  onMouseDown={() => { setRole(r.key); setIsOpen(false); setError(''); }}
-                  style={{
-                    padding: '0 14px',
-                    height: 44,
-                    minHeight: 44,
-                    cursor: 'pointer',
-                    background: role === r.key ? '#f8fafc' : 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <div style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: '2px',
-                    background: role === r.key ? '#1e40af' : '#fafafa',
-                    color: role === r.key ? 'white' : '#6b7280',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: 10.5,
-                    border: '1px solid #cbd5e1',
-                    flexShrink: 0
-                  }}>
-                    {r.icon}
-                  </div>
-                  <span style={{ fontWeight: 700, fontSize: 12.5, color: '#1f2937' }}>{r.label}</span>
+              Pocs Order — Table Ordering
+            </span>
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            {/* Porder Brand Logo */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 12 }}>
+              {/* Icon P */}
+              <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="58" height="58" rx="13" fill="#0D1B2A"/>
+                {/* Teal rounded square bg */}
+                <rect x="7" y="7" width="44" height="44" rx="9" fill="#0A7EA4"/>
+                {/* P letter */}
+                <text x="12" y="42" fontFamily="Georgia, 'Times New Roman', serif" fontSize="34" fontWeight="700" fill="white">P</text>
+                {/* Green dot */}
+                <circle cx="41" cy="16" r="5" fill="#10B981"/>
+              </svg>
+              {/* Wordmark */}
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ lineHeight: 1.1, marginBottom: 3 }}>
+                  <span style={{ color: '#0D1B2A', fontSize: 26, fontWeight: 900, letterSpacing: '-0.01em' }}>P</span>
+                  <span style={{ color: '#0A7EA4', fontSize: 26, fontWeight: 300, letterSpacing: '-0.01em' }}>order</span>
                 </div>
-              ))}
+                <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#0A7EA4', textTransform: 'uppercase' }}>TABLE ORDERING DEVICE</div>
+              </div>
+            </div>
+            <p style={{ color: '#9CA3AF', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Hệ Thống Gọi Món &amp; Bán Hàng Tại Quầy</p>
+          </div>
+
+          {error && (
+            <div style={{
+              background: '#fff1f2',
+              border: '1.5px solid #fca5a5',
+              color: '#be123c',
+              padding: '10px 12px',
+              borderRadius: '6px',
+              fontSize: 11.5,
+              fontWeight: 700,
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
+            }}>
+              <span>Lỗi:</span>
+              <span>{error}</span>
             </div>
           )}
-        </div>
 
-        <button 
-          className="btn btn-blue" 
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '2px',
-            border: 'none',
-            background: '#1e40af',
-            color: 'white',
-            fontSize: '13px',
-            fontWeight: 800,
-            cursor: loading ? 'wait' : 'pointer',
-          }}
-          onClick={handleLogin}
-          disabled={loading}
-        >
-          {loading ? 'Đang mở quầy...' : 'Bắt Đầu Bán Hàng'}
-        </button>
-        <div style={{ textAlign: 'center', marginTop: 12 }}>
-          <span style={{ fontSize: 10.5, color: '#6b7280', fontWeight: 500 }}>Mật khẩu dùng chung: <strong className="mono">123456</strong></span>
+          {/* Vị trí trực - dropdown */}
+          <div ref={dropdownRef} style={{ position: 'relative', marginBottom: 18 }}>
+            <label style={labelStyle}>Vị trí trực POS</label>
+            <button 
+              type="button"
+              onClick={() => setIsOpen(!isOpen)}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: '#2D2D2D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                outline: 'none',
+                color: '#FFFFFF',
+                fontSize: '13px'
+              }}
+            >
+              {selectedRoleObj ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '4px',
+                    background: 'rgba(10,126,164,0.2)',
+                    color: '#0A7EA4',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 800, fontSize: 10,
+                    border: '1px solid rgba(10,126,164,0.3)'
+                  }}>
+                    {selectedRoleObj.icon}
+                  </div>
+                  <span style={{ fontWeight: 700 }}>{selectedRoleObj.label}</span>
+                </div>
+              ) : (
+                <span style={{ color: '#9CA3AF' }}>Chọn vị trí làm việc...</span>
+              )}
+              {isOpen ? <ChevronUp size={16} style={{ color: '#9CA3AF' }} /> : <ChevronDown size={16} style={{ color: '#9CA3AF' }} />}
+            </button>
+
+            {isOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0,
+                background: '#2D2D2D',
+                border: '1px solid #1A1A1A',
+                borderRadius: '6px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                zIndex: 50, marginTop: 6,
+                maxHeight: 180, overflowY: 'auto',
+                padding: '6px 0'
+              }}>
+                {roles.map(r => (
+                  <div 
+                    key={r.key} 
+                    onMouseDown={() => { setRole(r.key); setIsOpen(false); setError(''); }}
+                    style={{
+                      padding: '0 16px', height: 40, minHeight: 40,
+                      cursor: 'pointer',
+                      background: role === r.key ? 'rgba(255,255,255,0.06)' : 'transparent',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      transition: 'background 0.1s'
+                    }}
+                  >
+                    <div style={{
+                      width: 24, height: 24, borderRadius: '4px',
+                      background: role === r.key ? 'rgba(10,126,164,0.35)' : 'rgba(255,255,255,0.1)',
+                      color: role === r.key ? '#0A7EA4' : '#9CA3AF',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 800, fontSize: 10,
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      flexShrink: 0
+                    }}>
+                      {r.icon}
+                    </div>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: role === r.key ? '#0A7EA4' : '#FFFFFF' }}>{r.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Name Input */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>Họ và tên nhân viên trực quầy</label>
+            <input 
+              className="input-field" 
+              value={name} 
+              onChange={e => { setName(e.target.value); setError(''); }} 
+              placeholder="Nhập tên thu ngân / người order..." 
+              style={{ 
+                width: '100%',
+                padding: '12px 16px',
+                background: '#2D2D2D',
+                border: 'none',
+                borderRadius: '6px',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                outline: 'none'
+              }} 
+            />
+          </div>
+
+          {/* Password Input */}
+          <div style={{ marginBottom: 24 }}>
+            <label style={labelStyle}>Mật khẩu đăng nhập</label>
+            <input 
+              type="password"
+              className="input-field mono" 
+              value={password} 
+              onChange={e => { setPassword(e.target.value); setError(''); }} 
+              placeholder="••••••••" 
+              style={{ 
+                width: '100%',
+                padding: '12px 16px',
+                background: '#2D2D2D',
+                border: 'none',
+                borderRadius: '6px',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                outline: 'none'
+              }} 
+            />
+            <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 8, fontWeight: 500 }}>
+              <span>Mật khẩu dùng chung: <strong className="mono" style={{ color: '#4B5563' }}>123456</strong></span>
+            </div>
+          </div>
+
+          <button 
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: '6px',
+              border: 'none',
+              background: '#0E7490',
+              color: '#FFFFFF',
+              fontSize: '13px',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              cursor: loading ? 'wait' : 'pointer',
+              transition: 'background 0.2s',
+              marginTop: 8
+            }}
+            onClick={handleLogin}
+            disabled={loading}
+            onMouseEnter={e => e.currentTarget.style.background = '#0e7490'}
+            onMouseLeave={e => e.currentTarget.style.background = '#0E7490'}
+          >
+            {loading ? 'Đang mở quầy...' : 'Bắt Đầu Bán Hàng'}
+          </button>
         </div>
       </div>
     </div>
