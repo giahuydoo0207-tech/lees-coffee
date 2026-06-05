@@ -185,23 +185,27 @@ const POSLoginPage = ({ onLogin }) => {
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             {/* Porder Brand Logo */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 12 }}>
-              {/* Icon P */}
-              <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="58" height="58" rx="13" fill="#0D1B2A"/>
-                {/* Teal rounded square bg */}
-                <rect x="7" y="7" width="44" height="44" rx="9" fill="#0A7EA4"/>
-                {/* P letter */}
-                <text x="12" y="42" fontFamily="Georgia, 'Times New Roman', serif" fontSize="34" fontWeight="700" fill="white">P</text>
-                {/* Green dot */}
-                <circle cx="41" cy="16" r="5" fill="#10B981"/>
-              </svg>
+              {/* Icon 3 lines */}
+              <div style={{
+                width: 58, height: 58, borderRadius: 14,
+                background: '#ECFEFF',
+                border: '1.5px solid #A5F3FC',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <svg width="28" height="22" viewBox="0 0 28 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0" y="0" width="28" height="3.5" rx="1.75" fill="#0E7490"/>
+                  <rect x="0" y="9.25" width="28" height="3.5" rx="1.75" fill="#0E7490"/>
+                  <rect x="0" y="18.5" width="28" height="3.5" rx="1.75" fill="#0E7490"/>
+                </svg>
+              </div>
               {/* Wordmark */}
               <div style={{ textAlign: 'left' }}>
                 <div style={{ lineHeight: 1.1, marginBottom: 3 }}>
-                  <span style={{ color: '#0D1B2A', fontSize: 26, fontWeight: 900, letterSpacing: '-0.01em' }}>P</span>
-                  <span style={{ color: '#0A7EA4', fontSize: 26, fontWeight: 300, letterSpacing: '-0.01em' }}>order</span>
+                  <span style={{ color: '#0E7490', fontSize: 26, fontWeight: 900, letterSpacing: '-0.01em' }}>P</span>
+                  <span style={{ color: '#0E7490', fontSize: 26, fontWeight: 300, letterSpacing: '-0.01em' }}>order</span>
                 </div>
-                <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#0A7EA4', textTransform: 'uppercase' }}>TABLE ORDERING DEVICE</div>
+                <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#0E7490', textTransform: 'uppercase', opacity: 0.7 }}>TABLE ORDERING DEVICE</div>
               </div>
             </div>
             <p style={{ color: '#9CA3AF', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Hệ Thống Gọi Món &amp; Bán Hàng Tại Quầy</p>
