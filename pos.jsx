@@ -180,9 +180,9 @@ const POSLoginPage = ({ onLogin }) => {
               </div>
               {/* Wordmark */}
               <div style={{ textAlign: 'left' }}>
-                <div style={{ lineHeight: 1.1, marginBottom: 3 }}>
-                  <span style={{ color: '#0E7490', fontSize: 26, fontWeight: 900, letterSpacing: '-0.01em' }}>P</span>
-                  <span style={{ color: '#0E7490', fontSize: 26, fontWeight: 300, letterSpacing: '-0.01em' }}>order</span>
+                <div style={{ lineHeight: 1.1, marginBottom: 4 }}>
+                  <span style={{ color: '#22D3EE', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>P</span>
+                  <span style={{ color: '#0E7490', fontSize: 28, fontWeight: 900, letterSpacing: '-0.01em' }}>order</span>
                 </div>
                 <div style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.22em', color: '#0E7490', textTransform: 'uppercase', opacity: 0.7 }}>TABLE ORDERING DEVICE</div>
               </div>

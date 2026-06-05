@@ -342,10 +342,10 @@ const ModuleSelector = ({ onSelect }) => {
           fontSize: 11,
           letterSpacing: '0.22em',
           color: '#9CA3AF',
-          fontWeight: 500,
+          fontWeight: 700,
           textTransform: 'uppercase',
           marginBottom: 8,
-          fontFamily: "'DM Sans', 'Inter', sans-serif"
+          fontFamily: "'Inter', sans-serif"
         }}>
           Nền tảng quản lý toàn diện
         </div>
@@ -431,10 +431,10 @@ const ModuleSelector = ({ onSelect }) => {
 
               {/* Card Title */}
               <div style={{
-                fontFamily: 'Syne, sans-serif',
+                fontFamily: "'Inter', sans-serif",
                 color: '#111827',
                 fontSize: 20,
-                fontWeight: 700,
+                fontWeight: 800,
                 letterSpacing: '-0.01em',
                 marginBottom: 10
               }}>
@@ -443,10 +443,10 @@ const ModuleSelector = ({ onSelect }) => {
 
               {/* Subtitle (VI) */}
               <div style={{
-                fontFamily: "'DM Sans', 'Inter', sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 color: '#111827',
                 fontSize: 13,
-                fontWeight: 500,
+                fontWeight: 700,
                 marginBottom: 4
               }}>
                 {m.subVi}
@@ -454,10 +454,10 @@ const ModuleSelector = ({ onSelect }) => {
 
               {/* Subtitle (EN) */}
               <div style={{
-                fontFamily: "'DM Sans', 'Inter', sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 color: '#9CA3AF',
                 fontSize: 11.5,
-                fontWeight: 400,
+                fontWeight: 600,
                 fontStyle: 'italic'
               }}>
                 {m.subEn}
@@ -475,8 +475,9 @@ const ModuleSelector = ({ onSelect }) => {
         fontSize: 11,
         color: '#9CA3AF',
         letterSpacing: '0.08em',
-        fontFamily: "'DM Sans', 'Inter', sans-serif",
-        textAlign: 'center'
+        fontFamily: "'Inter', sans-serif",
+        textAlign: 'center',
+        fontWeight: 600
       }}>
         © 2026 POCS PLATFORM — ALL RIGHTS RESERVED
       </div>
@@ -537,12 +538,12 @@ const LoginPage = ({ onLogin, module, onBack }) => {
   const labelStyle = {
     display: 'block',
     fontSize: 11,
-    fontWeight: 700,
+    fontWeight: 800,
     color: '#6B7280',
     marginBottom: 6,
     letterSpacing: '0.05em',
     textTransform: 'uppercase',
-    fontFamily: "'DM Sans', 'Inter', sans-serif"
+    fontFamily: "'Inter', sans-serif"
   };
 
   return (
@@ -591,13 +592,13 @@ const LoginPage = ({ onLogin, module, onBack }) => {
           {/* Module badge */}
           <div style={{ marginBottom: 20 }}>
             <span style={{
-              fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
+              fontSize: 10.5, fontWeight: 700, letterSpacing: '0.04em',
               textTransform: 'uppercase', padding: '6px 14px', borderRadius: 20,
               background: '#EEF2FF',
               color: '#1E3A8A',
               border: '1px solid #C7D2FE',
               display: 'inline-block',
-              fontFamily: "'DM Sans', sans-serif"
+              fontFamily: "'Inter', sans-serif"
             }}>
               Pocs Biz — Business Management
             </span>
