@@ -1,4 +1,6 @@
 {
+  "name": "pocs-platform",
+  "version": "1.0.0",
   "scripts": {
     "build": "esbuild app.jsx --bundle --minify --outfile=bundle.js --platform=browser --define:process.env.NODE_ENV=\\\"production\\\" && esbuild pos.jsx --bundle --minify --outfile=pos_bundle.js --platform=browser --define:process.env.NODE_ENV=\\\"production\\\""
   },

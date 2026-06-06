@@ -518,18 +518,33 @@ const LoginPage = ({ onLogin, module, onBack }) => {
 
   const handleLogin = () => {
     if (!canLogin) return;
+    const DEFAULT_ACCOUNTS = {
+      'nguyễn văn a': { name: 'Nguyễn Văn A', password: 'A123', role: 'director' },
+      'trần thị b': { name: 'Trần Thị B', password: 'B123', role: 'accountant' },
+      'lê văn c': { name: 'Lê Văn C', password: 'C123', role: 'manager' }
+    };
     const accounts = LS.get('lc_staff_accounts', {});
-    const customUser = accounts[name.trim()];
-    const isMyQuyen = name.trim().toLowerCase() === 'mỹ quyên';
+    const normalizedAccounts = {};
+    Object.entries(accounts).forEach(([k, v]) => {
+      normalizedAccounts[k.toLowerCase()] = v;
+    });
+    Object.entries(DEFAULT_ACCOUNTS).forEach(([k, v]) => {
+      normalizedAccounts[k] = v;
+    });
+
+    const key = name.trim().toLowerCase();
+    const customUser = normalizedAccounts[key];
+    const isMyQuyen = key === 'mỹ quyên';
     const expectedPassword = customUser ? customUser.password : (isMyQuyen ? '12345678' : '123456');
     if (password !== expectedPassword) {
       setError(customUser ? 'Mật khẩu đăng nhập cho tài khoản của bạn không chính xác.' : (isMyQuyen ? 'Mật khẩu đăng nhập cho tài khoản Mỹ Quyên không chính xác!' : 'Mật khẩu đăng nhập dùng chung không chính xác!'));
       return;
     }
     setLoading(true);
-    recordLogin(name.trim()).finally(() => {
+    const resolvedRole = customUser ? customUser.role : role;
+    recordLogin(customUser ? customUser.name : name.trim()).finally(() => {
       setTimeout(() => {
-        onLogin({ name: name.trim(), role });
+        onLogin({ name: customUser ? customUser.name : name.trim(), role: resolvedRole });
         setLoading(false);
       }, 600);
     });
@@ -755,7 +770,21 @@ const LoginPage = ({ onLogin, module, onBack }) => {
             <input 
               className="input-field" 
               value={name} 
-              onChange={e => { setName(e.target.value); setError(''); }} 
+              onChange={e => {
+                const val = e.target.value;
+                setName(val);
+                setError('');
+                const key = val.trim().toLowerCase();
+                const DEFAULT_ACCOUNTS = {
+                  'nguyễn văn a': 'director',
+                  'trần thị b': 'accountant',
+                  'lê văn c': 'manager'
+                };
+                const matchedRole = DEFAULT_ACCOUNTS[key];
+                if (matchedRole) {
+                  setRole(matchedRole);
+                }
+              }} 
               placeholder="Nhập đầy đủ họ tên (không viết tắt)..." 
               style={{ 
                 width: '100%',
@@ -860,14 +889,15 @@ const NAV = {
     { k: 'summary', i: PieChartIcon, l: 'Báo Cáo P&L Tổng Hợp' }
   ],
   manager: [
-    { k: 'report',          i: FilePlus,         l: 'Khai Báo Số Liệu Ngày' },
-    { k: 'history',         i: History,          l: 'Lịch Sử Kê Khai' },
-    { k: 'notify',          i: Bell,             l: 'Yêu Cầu Chỉnh Sửa' },
-    { k: 'mgr_schedule',    i: CalendarDays,     l: 'Bảng Công & Ca Làm Việc' },
-    { k: 'mgr_staff',       i: Users,            l: 'Danh Sách Nhân Viên' },
-    { k: 'mgr_performance', i: BarChart2,        l: 'Phân Tích Hiệu Suất' },
-    { k: 'mgr_inventory_alert', i: Package,      l: 'Cảnh Báo Tồn Kho' },
-    { k: 'mgr_menu',        i: UtensilsCrossed,  l: 'Quản Lý Thực Đơn' }
+    { k: 'report',               i: FilePlus,         l: 'Khai Báo Số Liệu Ngày' },
+    { k: 'mgr_ingredients_decl', i: Scale,            l: 'Khai Báo Nguyên Liệu' },
+    { k: 'history',              i: History,          l: 'Lịch Sử Kê Khai' },
+    { k: 'notify',               i: Bell,             l: 'Yêu Cầu Chỉnh Sửa' },
+    { k: 'mgr_schedule',         i: CalendarDays,     l: 'Bảng Công & Ca Làm Việc' },
+    { k: 'mgr_staff',            i: Users,            l: 'Danh Sách Nhân Viên' },
+    { k: 'mgr_performance',      i: BarChart2,        l: 'Phân Tích Hiệu Suất' },
+    { k: 'mgr_inventory_alert',  i: Package,          l: 'Cảnh Báo Tồn Kho' },
+    { k: 'mgr_menu',             i: UtensilsCrossed,  l: 'Quản Lý Thực Đơn' }
   ]
 };
 const PAGE_TITLE = {
@@ -876,6 +906,7 @@ const PAGE_TITLE = {
   review: 'Thẩm Định Báo Cáo Tài Chính',
   summary: 'Kết Quả Hoạt Động Kinh Doanh (P&L)',
   report: 'Khai Báo Dòng Tiền Ngày',
+  mgr_ingredients_decl: 'Khai Báo Nguyên Liệu',
   history: 'Lịch Sử Báo Cáo Doanh Thu',
   notify: 'Thông Báo Yêu Cầu Chỉnh Sửa',
   shift: 'Lịch Sử Kết Ca',
@@ -979,7 +1010,7 @@ const Layout = ({ user, page, setPage, pendingCount, rejectCount, children }) =>
                 <div key={m.k}>
                   <div className={`nav-item${isActive ? ' active' : ''}`} onClick={() => { setOpenSub(!openSub); if (!isActive) setPage('shift_cashier'); }}>
                     <Icon size={14} strokeWidth={1.8} opacity={isActive ? 1 : 0.7} />
-                    <span style={{ flex: 1 }}>{m.l}</span>
+                    <span style={{ flex: 1, whiteSpace: 'nowrap' }}>{m.l}</span>
                   </div>
                   {openSub && (
                     <div className="fade" style={{ animationDuration: '0.1s' }}>
@@ -994,7 +1025,7 @@ const Layout = ({ user, page, setPage, pendingCount, rejectCount, children }) =>
             return (
               <div key={m.k} className={`nav-item${page === m.k ? ' active' : ''}`} onClick={() => setPage(m.k)}>
                 <Icon size={14} strokeWidth={1.8} opacity={page === m.k ? 1 : 0.7} />
-                <span style={{ flex: 1 }}>{m.l}</span>
+                <span style={{ flex: 1, whiteSpace: 'nowrap' }}>{m.l}</span>
                 {badge > 0 && <span style={{ background: '#be123c', color: 'white', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 2, letterSpacing: 0.3 }}>{badge}</span>}
               </div>
             );
@@ -1355,6 +1386,14 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: c }} className="mono">{fmt(v)}</div>
                 </div>
               ))}
+              <div style={{ gridColumn: '4 / 6', gridRow: '2', background: 'white', border: '1px solid #bfdbfe', borderRadius: '2px', padding: '8px 10px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, marginBottom: 3 }}>Nhân viên kết ca</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#1e40af', lineHeight: 1.4 }}>
+                  {Array.from(new Set(dayShifts.map(s => s.staffName).filter(Boolean))).map((name, i) => (
+                    <div key={i} style={{ whiteSpace: 'nowrap' }}>{name}</div>
+                  ))}
+                </div>
+              </div>
             </div>
             {shiftTotal.orders > 0 && (
               <div style={{ marginTop: 8, fontSize: 11.5, color: '#1e40af', fontWeight: 600 }}>
@@ -1440,6 +1479,204 @@ const ReportForm = ({ user, editReport, onSave, onCancel }) => {
           </button>
           {onCancel && <button className="btn btn-outline" style={{ justifyContent: 'center', padding: 10, borderRadius: '2px', fontWeight: 600 }} onClick={onCancel}>HUỶ THAY ĐỔI</button>}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ── MANAGER INGREDIENTS DECLARATION (Barista Shift Inventory Sync) ──
+const ManagerIngredientsDeclaration = () => {
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+
+  const baristaShifts = useMemo(() => {
+    const allShifts = LS.get('lc_shifts', []);
+    return allShifts.filter(s => s && s.date === date && s.roleType === 'barista');
+  }, [date]);
+
+  const ingredientTotals = useMemo(() => {
+    const totals = {};
+    baristaShifts.forEach(s => {
+      const ings = s.ingredients || [];
+      ings.forEach(ing => {
+        if (!ing.name) return;
+        if (!totals[ing.name]) {
+          totals[ing.name] = { name: ing.name, unit: ing.unit, start: 0, in: 0, out: 0 };
+        }
+        totals[ing.name].start += (Number(ing.start) || 0);
+        totals[ing.name].in += (Number(ing.in) || 0);
+        totals[ing.name].out += (Number(ing.out) || 0);
+      });
+    });
+    return Object.values(totals);
+  }, [baristaShifts]);
+
+  const syncToInventory = () => {
+    if (ingredientTotals.length === 0) return;
+    
+    let rawInventory = LS.get('lc_inventory', []);
+    let inventory = Array.isArray(rawInventory) ? rawInventory.filter(Boolean) : [];
+    
+    let updatedCount = 0;
+    ingredientTotals.forEach(ing => {
+      const ending = ing.start + ing.in - ing.out;
+      const matched = inventory.find(i => i && typeof i.name === 'string' && i.name.toLowerCase().includes(ing.name.toLowerCase()));
+      if (matched) {
+        matched.quantity = ending;
+        updatedCount++;
+      } else {
+        inventory.push({
+          id: 'inv-' + Math.random().toString(36).slice(2, 9),
+          name: ing.name,
+          quantity: ending,
+          unit: ing.unit,
+          minRequired: 10
+        });
+        updatedCount++;
+      }
+    });
+
+    LS.set('lc_inventory', inventory);
+    alert(`Đã cập nhật và liên kết ${updatedCount} nguyên vật liệu vào Kho hàng thành công!`);
+  };
+
+  const currentInventory = useMemo(() => {
+    const all = LS.get('lc_inventory', []);
+    return Array.isArray(all) ? all.filter(Boolean) : [];
+  }, [baristaShifts]);
+
+  return (
+    <div className="fade" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: 20, alignItems: 'start' }}>
+      {/* Column Left: Input & Sync Controls */}
+      <div className="card" style={{ borderRadius: '2px', border: '1px solid #e5e7eb', background: 'white', padding: '24px' }}>
+        <div className="section-label">Thông tin thời gian</div>
+        <FormRow label="Ngày lập báo cáo">
+          <input type="date" className="input-field" value={date} onChange={e => setDate(e.target.value)} style={{ borderRadius: '2px', border: '1px solid #e5e7eb' }} />
+        </FormRow>
+        
+        <div className="divider" />
+
+        {/* ── CA PHA CHẾ TỔNG HỢP PANEL ── */}
+        {baristaShifts.length > 0 ? (
+          <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: '2px', padding: '14px 16px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {baristaShifts.length} CA PHA CHẾ ĐÃ KẾT {fmtDate(date).split('/').slice(0,2).join('/')}
+                </div>
+                <div style={{ fontSize: 11, color: '#3b82f6', marginTop: 2 }}>
+                  {baristaShifts.map(s => s.staffName + ' — ' + (s.shift === 'morning' ? 'Ca Sáng' : s.shift === 'afternoon' ? 'Ca Chiều' : 'Ca Tối')).join(' · ')}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={syncToInventory}
+                style={{ background: '#1e40af', color: 'white', border: 'none', borderRadius: '2px', padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                Cập nhật vào kho
+              </button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+              {ingredientTotals.map(ing => (
+                <div key={ing.name} style={{ background: 'white', border: '1px solid #bfdbfe', borderRadius: '2px', padding: '8px 10px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ing.name}>{ing.name}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: '#15803d' }} className="mono">
+                    {ing.start + ing.in - ing.out} <span style={{ fontSize: 9.5, fontWeight: 600, color: '#9ca3af' }}>{ing.unit}</span>
+                  </div>
+                  <div style={{ fontSize: 8.5, color: '#9ca3af', marginTop: 3, fontWeight: 500 }}>
+                    Hao phí: {ing.out}
+                  </div>
+                </div>
+              ))}
+              
+              {/* Closing barista names card (spans columns 4 & 5) */}
+              <div style={{ gridColumn: '4 / 6', gridRow: '2', background: 'white', border: '1px solid #bfdbfe', borderRadius: '2px', padding: '8px 10px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, marginBottom: 3 }}>Nhân viên kết ca</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#1e40af', lineHeight: 1.4 }}>
+                  {Array.from(new Set(baristaShifts.map(s => s.staffName).filter(Boolean))).map((name, i) => (
+                    <div key={i} style={{ whiteSpace: 'nowrap' }}>{name}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ background: '#fafafa', border: '1px dashed #d1d5db', borderRadius: '2px', padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 600 }}>Chưa có ca pha chế nào kết ca cho ngày {fmtDate(date)} — Vui lòng kiểm kê thủ công.</span>
+          </div>
+        )}
+
+        <div className="section-label" style={{ marginTop: 24 }}>CHI TIẾT TỒN KHO HIỆN TẠI HỆ THỐNG</div>
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: '2px', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
+                <th style={{ padding: '8px 12px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>Nguyên Liệu</th>
+                <th style={{ padding: '8px 12px', textAlign: 'right', color: '#64748b', fontWeight: 700 }}>Số Lượng Hiện Tại</th>
+                <th style={{ padding: '8px 12px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>Trạng Thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentInventory.map(item => {
+                const isLow = item.quantity <= (item.minRequired || 10);
+                return (
+                  <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '8px 12px', fontWeight: 600, color: '#1a1a1a' }}>{item.name}</td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }} className="mono">
+                      {item.quantity} <span style={{ fontSize: 10, color: '#6b7280', fontWeight: 500 }}>{item.unit}</span>
+                    </td>
+                    <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        color: isLow ? '#be123c' : '#15803d',
+                        background: isLow ? '#fff1f2' : '#f0fdf4',
+                        border: `1px solid ${isLow ? '#fca5a5' : '#86efac'}`,
+                        padding: '2px 6px',
+                        borderRadius: '2px',
+                        textTransform: 'uppercase'
+                      }}>
+                        {isLow ? 'Sắp hết hàng' : 'An toàn'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Column Right: Action Stats */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="card" style={{ borderRadius: '2px', border: '1px solid #e5e7eb', background: 'white', padding: '20px', borderTop: '3px solid #1e40af' }}>
+          <div className="section-label" style={{ marginBottom: 16 }}>Tổng quan ca làm việc</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}>
+            <span style={{ color: '#6b7280' }}>Ca pha chế đã nộp:</span>
+            <span style={{ fontWeight: 700 }} className="mono">{baristaShifts.length} ca</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}>
+            <span style={{ color: '#6b7280' }}>Nguyên liệu kết toán:</span>
+            <span style={{ fontWeight: 700 }} className="mono">{ingredientTotals.length} loại</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}>
+            <span style={{ color: '#6b7280' }}>Tổng mặt hàng kho:</span>
+            <span style={{ fontWeight: 700 }} className="mono">{currentInventory.length} mặt hàng</span>
+          </div>
+        </div>
+
+        <button 
+          className="btn btn-blue" 
+          style={{ justifyContent: 'center', padding: 12, fontSize: 13, borderRadius: '2px', fontWeight: 700 }}
+          onClick={syncToInventory}
+          disabled={baristaShifts.length === 0}
+        >
+          ĐỒNG BỘ TỒN KHO HỆ THỐNG
+        </button>
       </div>
     </div>
   );
@@ -2727,7 +2964,7 @@ const App = () => {
 
   const handleModuleSelect = (mod) => {
     if (mod === 'order') {
-      window.location.href = 'https://pocs-lee.vercel.app';
+      window.location.href = 'pos.html';
       return;
     }
     setModule(mod);
@@ -2829,10 +3066,14 @@ const App = () => {
   const pendingCount = useMemo(() => reports.filter(r => r.status === 'pending').length, [reports]);
   const rejectCount = useMemo(() => reports.filter(r => r.status === 'rejected').length, [reports]);
 
-  // Nếu user đã login từ session cũ → tự vào biz (không cần chọn module lại)
-  useEffect(() => { if (user && !module) setModule('biz'); }, [user]);
+  // Nếu user đã login từ session cũ → tự vào biz (không cần chọn module lại, trừ khi có hash #module)
+  useEffect(() => { 
+    if (user && !module && window.location.hash !== '#module') {
+      setModule('biz'); 
+    } 
+  }, [user]);
 
-  if (!module && !user) return <ModuleSelector onSelect={handleModuleSelect} />;
+  if (!module) return <ModuleSelector onSelect={handleModuleSelect} />;
   if (!user) return <LoginPage onLogin={login} module={module} onBack={handleBackToModules} />;
 
   const content = () => {
@@ -2854,6 +3095,7 @@ const App = () => {
     // Staff Portal views
     if (page === 'staff_schedule') return <StaffSchedule user={user} />;
     // Manager extra views
+    if (page === 'mgr_ingredients_decl') return <ManagerIngredientsDeclaration />;
     if (page === 'mgr_schedule')    return <MgrShiftSchedule />;
     if (page === 'mgr_staff')       return <MgrStaffList />;
     if (page === 'mgr_performance') return <MgrPerformance reports={reports} />;

@@ -330,9 +330,9 @@ const StandalonePOSApp = () => {
   };
 
   const handleSetPage = (pageName) => {
-    // If the POS app ever tries to go back to dashboard, we can redirect them to the financial index page!
-    if (pageName !== 'order') {
-      window.location.href = 'index.html'; // Go back to financial portal!
+    // 'module' = user pressed "Quay Lại" → go back to module selector
+    if (pageName === 'module' || pageName !== 'order') {
+      window.location.href = 'index.html#module';
     }
   };
 
